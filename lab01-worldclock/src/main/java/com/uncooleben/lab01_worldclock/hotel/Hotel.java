@@ -18,13 +18,16 @@ public class Hotel {
 
 	private String _name = ">>>Coder Hotel<<<";
 
-	public Hotel(Date date) {
+	private Manager _manager;
+
+	public Hotel(Date date, Manager manager) {
 		this._worldClocks = new HashMap<Locale, WorldClock>();
 		this._worldClocks.put(Locale.LONDON, new LondonClock(date));
 		this._worldClocks.put(Locale.MOSCOW, new MoscowClock(date));
 		this._worldClocks.put(Locale.BEIJING, new BeijingClock(date));
 		this._worldClocks.put(Locale.NEW_YORK, new NewYorkClock(date));
 		this._worldClocks.put(Locale.SYDNEY, new SydneyClock(date));
+		this._manager = manager;
 	}
 
 	public String getName() {
@@ -39,5 +42,9 @@ public class Hotel {
 
 	public Map<Locale, WorldClock> getWorldClocks() {
 		return this._worldClocks;
+	}
+
+	public Manager getManager() {
+		return this._manager;
 	}
 }
