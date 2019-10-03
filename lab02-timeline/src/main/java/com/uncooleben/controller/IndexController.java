@@ -10,18 +10,18 @@ import com.uncooleben.dao.MessageDAO;
 public class IndexController {
 
 	private MessageDAO messageDAO;
-	private int newMessages;
 	
 	public IndexController() {
 		this.messageDAO = new MessageDAO();
-		this.newMessages = 0;
 	}
 
 	@RequestMapping("/")
     public ModelAndView display()  
     {
 		ModelAndView mv = new ModelAndView("index");
-		mv.addObject("newMessages", String.valueOf(newMessages));
+		mv.addObject("lastRefreshTime", String.valueOf(System.currentTimeMillis()));
+		mv.addObject("numberOfMessage", String.valueOf((int)3));
+		mv.addObject("messageList", messageDAO.queryMessage(3, System.currentTimeMillis()));
         return mv;
     }
 	

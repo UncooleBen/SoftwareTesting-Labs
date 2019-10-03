@@ -44,7 +44,7 @@ public class MessageDAOTest {
 			messages.add(0, message);
 			this.messageDAO.storeMessage(message);
 		}
-		List<Message> stored_messages = this.messageDAO.queryMessage(5);
+		List<Message> stored_messages = this.messageDAO.queryMessage(5, System.currentTimeMillis());
 		for (int i=0; i<5; ++i) {
 			Message message = messages.get(i);
 			Message stored_message = stored_messages.get(i);

@@ -24,6 +24,7 @@ public class MessageDAO {
 			String mysqlUser = "root";
 			String mysqlPassword = "root";
 			String mysqlUrl = "jdbc:mysql://localhost:3306/lab02-timeline?serverTimezone=UTC";
+			Class.forName("com.mysql.jdbc.Driver");
 			this.conn = DriverManager.getConnection(mysqlUrl, mysqlUser, mysqlPassword);
 		    this.format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		} catch(Exception e) {
@@ -31,7 +32,7 @@ public class MessageDAO {
 		}
 	}
 	
-	public Status storeMessage(Message message) {
+	public void storeMessage(Message message) {
 		String INSERT = "INSERT INTO message(uuid, username, content, time) " + "VALUES(?,?,?,?)";
 		try {
 			PreparedStatement pstmt = conn.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS);
@@ -40,11 +41,9 @@ public class MessageDAO {
 			pstmt.setString(3, message.get_content());
 			pstmt.setString(4, format.format(message.get_time()));
 			pstmt.execute();
-			return Status.SUCCESS;
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		return Status.FAILURE;
 	}
 	
 	public List<Message> queryMessage(UUID uuid) {
@@ -55,7 +54,8 @@ public class MessageDAO {
 			pstmt.setString(1, uuid.toString());
 			ResultSet rs = pstmt.executeQuery();
 			while (rs.next()) {
-				result_list.add(new Message(UUID.fromString(rs.getString("uuid")), rs.getString("username"), rs.getString("content"), format.parse(rs.getString("time"))));
+				Message temp_message = new Message(UUID.fromString(rs.getString("uuid")), rs.getString("username"), rs.getString("content"), format.parse(rs.getString("time")));
+				result_list.add(temp_message);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -63,20 +63,39 @@ public class MessageDAO {
 		return result_list;
 	}
 	
-	public List<Message> queryMessage(int size) {
-		String SELECT = "SELECT * FROM message ORDER BY time DESC LIMIT ?";
+	public List<Message> queryMessage(int size, long millisec) {
+		String SELECT = "SELECT * FROM message WHERE time < ? ORDER BY time DESC LIMIT ?";
 		List<Message> result_list = new ArrayList<Message>();
 		try {
 			PreparedStatement pstmt = conn.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);
-			pstmt.setInt(1, size);
+			pstmt.setString(1, format.format(new Date(millisec)));
+			pstmt.setInt(2, size);
 			ResultSet rs = pstmt.executeQuery();
 			while (rs.next()) {
-				result_list.add(new Message(UUID.fromString(rs.getString("uuid")), rs.getString("username"), rs.getString("content"), format.parse(rs.getString("time"))));
+				Message temp_message = new Message(UUID.fromString(rs.getString("uuid")), rs.getString("username"), rs.getString("content"), format.parse(rs.getString("time")));
+				temp_message.set_ago(millisec);
+				result_list.add(temp_message);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return result_list;
+	}
+	
+	public int queryUpdates(long millisec) {
+		String formattedDate = format.format(new Date(millisec));
+		String SELECT = "SELECT COUNT(*) FROM message WHERE time > ?";
+		try {
+			PreparedStatement pstmt = conn.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);
+			pstmt.setString(1, formattedDate);
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				return rs.getInt(1);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return 0;
 	}
 	
 	public void finalize() {
