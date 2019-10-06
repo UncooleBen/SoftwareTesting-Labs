@@ -4,13 +4,50 @@
 <head>
 <title>Timeline</title>
 <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.4.1.min.js"></script>
+<h1>Timeline Discussion Board</h1>
 </head>
 <body>
+
 <script type="text/javascript">
+	var lastRefreshTime;
+	var numberOfMessage;
+	var get_three_more = function() {
+		//alert('More Button Clicked');
+		$.ajax({
+			url : 'more',
+			type: 'POST',
+			data : { 'numberOfMessage' : numberOfMessage, 'lastRefreshTime' : lastRefreshTime },
+			success : function(data) {
+				numberOfMessage += 3;
+				var div_content = "";
+				var json = JSON.parse(data)
+				var table_head = "<table width=\"400\" >";
+				var table_tail = "</table>";
+				for (var i=0; i<json.length; ++i) {
+					var tr1 = "<tr height=\"25\">";
+					var td11 = "<td width=\"250\">" + json[i]["_username"] + "</td>";
+					var td12 = "<td width=\"150\">" + json[i]["_ago"] + "</td></tr>";
+					var tr2 = "<tr height=\"0\">";
+					var td21 =  "<td colspan=\"2\">" + json[i]["_content"] + "</td></tr>";
+					var tr3 = "<tr><td colspan=\"2\"><hr></td></tr>";
+					div_content += (tr1+td11+td12+tr2+td21+tr3);
+				}
+				div_content = table_head + div_content + table_tail;
+				$("#id_dynamic_div").html(div_content);
+			}
+		});
+	};
+	var check_form = function(event) {
+		if (!($("#id_username").val() && $("#id_content").val())) {
+			$("#id_error_message").html("<font color=\"red\">Username and content cannot be empty!</font>");
+			event.preventDefault();
+		}
+	};
 	$(window.documemt).ready(function() {
 		//alert(${lastRefreshTime});
-		var lastRefreshTime = ${lastRefreshTime};
-		var numberOfMessage = ${numberOfMessage};
+		lastRefreshTime = ${lastRefreshTime};
+		numberOfMessage = ${numberOfMessage};
+		get_three_more();
 		setInterval(updateAjaxWrapper, 5000);
 		function updateAjaxWrapper() {
 			$.ajax({
@@ -23,59 +60,51 @@
 			});
 		}
 		//alert(JSON.stringify(numberOfMessage, null, 4));
-		$("#id_more").click(function() {
-			//alert('More Button Clicked');
-			$.ajax({
-				url : 'more',
-				type: 'POST',
-				data : { 'numberOfMessage' : numberOfMessage, 'lastRefreshTime' : lastRefreshTime },
-				success : function(data) {
-					numberOfMessage += 3;
-					var div_content = "";
-					var json = JSON.parse(data)
-					for (var i=0; i<json.length; ++i) {
-						var tr1 = "<tr height=\"25\">";
-						var td11 = "<td>" + json[i]["_username"] + "<td>";
-						var td12 = "<td>" + json[i]["_ago"] + "<td><tr>";
-						var tr2 = "<tr height=\"0\">";
-						var td21 =  "<td colspan=\"2\">" + json[i]["_content"] + "<td><tr>";
-						div_content += (tr1+td11+td12+tr2+td21);
-					}
-					$("#id_dynamic_div").remove();
-				}
-			});
-		})
+		$("#id_more").click(get_three_more);
+		$("#id_new_message_form").submit(check_form);
 	});
 </script>
-<div style="height:700px;width:400;overflow:auto" >
-	<table id="id_table" border="2" bordercolor="blue">
-	<tr height="25">
-		<td width="250" >Timeline</td>
-		<td width ="150">
-    		<button id="id_update" onclick="window.location.reload();">0 Update(s)</button>
-		</td>
-	</tr>
-	<div id="id_dynamic_div">
-		<c:forEach items="${messageList}" var="message" end="2">
-	    	<tr height="25">
-	    		<td>
-	    			<c:out value="${message._username}"/>
-	    		</td>
-	    		<td>
-	    			<c:out value="${message._ago}"/>
-	    		</td>
-	    	</tr>
-	    	<tr height="0">
-	    		<td colspan="2">
-	    			<c:out value="${message._content}"/>
-	    		</td>
-	    	</tr>
-		</c:forEach>
-	</div>
+<div style="height:400;width:500;overflow:auto" >
+	<table id="id_table" >
+		<tr height="25">
+			<td width="250" >Messages</td>
+			<td width ="150">
+	    		<button id="id_update" onclick="window.location.reload();">0 Update(s)</button>
+			</td>
+		</tr>
 	</table>
-	<button id="id_more">More</button>
-	
-	
+	<div id="id_dynamic_div"></div>
 </div>
+<button id="id_more">More</button><br>
+
+<form id="id_new_message_form" action="newMessage" method="post" >
+	<table width="500">
+		<tr>
+			<td>Username</td>
+		</tr>
+		<tr>
+			<td>
+				<input id="id_username" type="text" name="username" size="25" />
+			</td>
+		</tr>
+		<tr>
+			<td>What do you want to say?</td>
+		</tr>
+		<tr>
+			<td>
+				<textarea id="id_content" name="content" form="id_new_message_form" rows="5" cols="50"></textarea>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<input type="submit" value="Submit">
+			</td>
+		</tr>
+		<tr>
+			<td id="id_error_message" >
+			</td>
+		</tr>
+	</table>
+</form>
 </body>
 </html>

@@ -64,7 +64,7 @@ public class MessageDAO {
 	}
 	
 	public List<Message> queryMessage(int size, long millisec) {
-		String SELECT = "SELECT * FROM message WHERE time < ? ORDER BY time DESC LIMIT ?";
+		String SELECT = "SELECT * FROM message WHERE time <= ? ORDER BY time DESC LIMIT ?";
 		List<Message> result_list = new ArrayList<Message>();
 		try {
 			PreparedStatement pstmt = conn.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);

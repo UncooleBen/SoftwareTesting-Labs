@@ -25,7 +25,6 @@ public class MoreController {
 		List<Message> messages = this.messageDAO.queryMessage(Integer.parseInt(numberOfMessage) + 3, Long.parseLong(lastRefreshTime));
 		Gson gson = new Gson();
 		String json = gson.toJson(messages);
-		System.out.println(json);
 		return json;
 	}
 }

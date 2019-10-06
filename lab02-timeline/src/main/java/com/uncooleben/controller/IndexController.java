@@ -20,8 +20,7 @@ public class IndexController {
     {
 		ModelAndView mv = new ModelAndView("index");
 		mv.addObject("lastRefreshTime", String.valueOf(System.currentTimeMillis()));
-		mv.addObject("numberOfMessage", String.valueOf((int)3));
-		mv.addObject("messageList", messageDAO.queryMessage(3, System.currentTimeMillis()));
+		mv.addObject("numberOfMessage", String.valueOf((int)0));
         return mv;
     }
 	
