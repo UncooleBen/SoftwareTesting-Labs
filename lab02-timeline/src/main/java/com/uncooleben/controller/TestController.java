@@ -6,6 +6,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+/**
+ * IGNORE THIS CLASS
+ */
 @Controller
 public class TestController {
 
@@ -13,7 +16,7 @@ public class TestController {
 	public String test() {
 		return "ajax_test_page";
 	}
-	
+
 	@RequestMapping("/get_time")
 	@ResponseBody
 	public String get_server_time() {

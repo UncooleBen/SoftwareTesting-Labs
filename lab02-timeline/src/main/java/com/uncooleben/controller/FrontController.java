@@ -1,35 +1,32 @@
 package com.uncooleben.controller;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 import com.uncooleben.config.MVCConfig;
-import com.uncooleben.dao.MessageDAO;
 
-
+/**
+ * This class is a part of Software-Testing lab02 timeline.
+ * 
+ * <p>
+ * This is the front controller class for SpringMVC.
+ * 
+ * @author Juntao Peng
+ */
 public class FrontController extends AbstractAnnotationConfigDispatcherServletInitializer {
 
 	@Override
 	protected Class<?>[] getRootConfigClasses() {
-		// TODO Auto-generated method stub
-		return new Class[] {MVCConfig.class};
+		return new Class[] { MVCConfig.class };
 	}
 
 	@Override
 	protected Class<?>[] getServletConfigClasses() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	protected String[] getServletMappings() {
-		// TODO Auto-generated method stub
-		return new String[] {"/"};
+		return new String[] { "/" };
 	}
-	
-	
-	
+
 }
