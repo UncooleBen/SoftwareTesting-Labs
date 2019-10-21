@@ -7,15 +7,33 @@ import org.springframework.web.servlet.ModelAndView;
 import com.uncooleben.dao.MessageDAO;
 import com.uncooleben.dao.MessageMySQLDAO;
 
+/**
+ * This class is a part of Software-Testing lab02 timeline.
+ * 
+ * <p>
+ * This is the index controller. When user first visit our web site, he will be
+ * dispatched to this controller.
+ * 
+ * @author Juntao Peng
+ */
 @Controller
 public class IndexController {
 
 	private MessageDAO messageDAO;
 
+	/**
+	 * Constructor of this class
+	 */
 	public IndexController() {
 		this.messageDAO = new MessageMySQLDAO();
 	}
 
+	/**
+	 * Redirect the user to the ModelAndView of index.jsp. Sets the lastRefreshTime
+	 * and number of Message attribute to the view page.
+	 * 
+	 * @return A ModelAndView object of index.jsp
+	 */
 	@RequestMapping("/")
 	public ModelAndView display() {
 		ModelAndView mv = new ModelAndView("index");

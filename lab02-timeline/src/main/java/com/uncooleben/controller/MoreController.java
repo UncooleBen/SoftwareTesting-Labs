@@ -11,15 +11,37 @@ import com.uncooleben.dao.MessageDAO;
 import com.uncooleben.dao.MessageMySQLDAO;
 import com.uncooleben.model.Message;
 
+/**
+ * This class is a part of Software-Testing lab02 timeline.
+ * 
+ * <p>
+ * This is the more controller. When user wants more messages, methods in this
+ * class will be called to perform query for more messages.
+ * 
+ * @author Juntao Peng
+ */
 @Controller
 public class MoreController {
 
 	private MessageDAO messageDAO;
 
+	/**
+	 * Constructor
+	 */
 	public MoreController() {
 		this.messageDAO = new MessageMySQLDAO();
 	}
 
+	/**
+	 * This method query three more messages from database according to the
+	 * lastRefreshTime
+	 * 
+	 * @param numberOfMessage The number of message currently displays in the view
+	 * @param lastRefreshTime The last refresh time as this method query three more
+	 *                        message whose time stamp <= last refresh time.
+	 * 
+	 * @return A string object represents the messages in JSON
+	 */
 	@RequestMapping("/more")
 	@ResponseBody
 	public String more(String numberOfMessage, String lastRefreshTime) {
