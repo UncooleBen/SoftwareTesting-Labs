@@ -1,5 +1,6 @@
 package com.uncooleben.controller;
 
+import com.uncooleben.dao.MessageDBDAO;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -23,7 +24,7 @@ public class UpdateController {
 	private MessageDAO messageDAO;
 
 	public UpdateController() {
-		this.messageDAO = new MessageMySQLDAO();
+		this.messageDAO = (new MessageDBDAO()).getActualDAO();
 	}
 
 	/**

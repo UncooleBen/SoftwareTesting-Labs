@@ -1,5 +1,6 @@
 package com.uncooleben.controller;
 
+import com.uncooleben.dao.MessageDBDAO;
 import java.util.List;
 
 import org.springframework.stereotype.Controller;
@@ -29,7 +30,7 @@ public class MoreController {
 	 * Constructor
 	 */
 	public MoreController() {
-		this.messageDAO = new MessageMySQLDAO();
+		this.messageDAO = (new MessageDBDAO()).getActualDAO();
 	}
 
 	/**
