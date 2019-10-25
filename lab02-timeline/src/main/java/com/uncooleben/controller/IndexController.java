@@ -1,11 +1,13 @@
 package com.uncooleben.controller;
 
+import com.uncooleben.dao.MessageDBDAO;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.uncooleben.dao.MessageDAO;
 import com.uncooleben.dao.MessageMySQLDAO;
+import com.uncooleben.dao.MessageDBDAO;
 
 /**
  * This class is a part of Software-Testing lab02 timeline.
@@ -25,7 +27,7 @@ public class IndexController {
 	 * Constructor of this class
 	 */
 	public IndexController() {
-		this.messageDAO = new MessageMySQLDAO();
+		this.messageDAO = (new MessageDBDAO()).getActualDAO();
 	}
 
 	/**
