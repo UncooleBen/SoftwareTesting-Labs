@@ -34,6 +34,8 @@ public class UpdateController {
 	 *                        time
 	 * 
 	 * @return A string in the form of "X Update(s)"
+	 *
+	 * @author Juntao Peng
 	 */
 	@RequestMapping("/update")
 	@ResponseBody

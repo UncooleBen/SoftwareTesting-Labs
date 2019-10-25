@@ -59,7 +59,6 @@
 				}
 			});
 		}
-		//alert(JSON.stringify(numberOfMessage, null, 4));
 		$("#id_more").click(get_three_more);
 		$("#id_new_message_form").submit(check_form);
 	});
