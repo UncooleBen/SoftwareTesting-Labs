@@ -155,18 +155,23 @@ public class MessageMySQLDAO implements MessageDAO {
 		return 0;
 	}
 
-	public void clearTable() {
+	@Override
+	public boolean clearTable() {
 		String DELETE = "DELETE FROM message";
 		Connection conn = null;
 		PreparedStatement pstmt = null;
+		boolean success = false;
 		try {
 			conn = getConnection();
 			pstmt = conn.prepareStatement(DELETE, Statement.RETURN_GENERATED_KEYS);
 			pstmt.execute();
+			success = true;
 		} catch (SQLException sqle) {
 			sqle.printStackTrace(System.err);
+			success = false;
 		} finally {
 			closeStatementAndConnection(pstmt, conn);
+			return success;
 		}
 	}
 

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>MessageSQLServerDAO.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">MessageMySQLDAOTest (Oct 26, 2019 10:00:56 PM)</a> &gt; <a href="../../index.html" class="el_group">lab02-timeline</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">com.uncooleben.dao</a> &gt; <span class="el_source">MessageSQLServerDAO.java</span></div><h1>MessageSQLServerDAO.java</h1><pre class="source lang-java linenums">package com.uncooleben.dao;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
+import com.uncooleben.model.Message;
+
+<span class="nc" id="L18">public class MessageSQLServerDAO implements MessageDAO {</span>
+<span class="nc" id="L19">	private static String driver = &quot;com.microsoft.sqlserver.jdbc.SQLServerDriver&quot;;</span>
+<span class="nc" id="L20">	private static String mysqlUrl = &quot;jdbc:sqlserver://localhost:1433;&quot; + &quot;databaseName=timeline&quot;;</span>
+<span class="nc" id="L21">	private static String mysqlUser = &quot;sa&quot;;</span>
+<span class="nc" id="L22">	private static String mysqlPassword = &quot;root&quot;;</span>
+<span class="nc" id="L23">	private static SimpleDateFormat format = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);</span>
+
+	protected void loadDriver() {
+		try {
+<span class="nc" id="L27">			Class.forName(driver);</span>
+<span class="nc" id="L28">		} catch (Exception classNotFoundException) {</span>
+<span class="nc" id="L29">			classNotFoundException.printStackTrace(System.err);</span>
+		}
+<span class="nc" id="L31">	}</span>
+
+	protected Connection getConnection() throws SQLException {
+<span class="nc" id="L34">		Connection conn = null;</span>
+<span class="nc" id="L35">		loadDriver();</span>
+<span class="nc" id="L36">		conn = DriverManager.getConnection(mysqlUrl, mysqlUser, mysqlPassword);</span>
+<span class="nc" id="L37">		return conn;</span>
+	}
+
+	protected void closeStatementAndConnection(PreparedStatement pstmt, Connection conn) {
+<span class="nc bnc" id="L41" title="All 2 branches missed.">		if (pstmt != null) {</span>
+			try {
+<span class="nc" id="L43">				pstmt.close();</span>
+<span class="nc" id="L44">			} catch (SQLException sqle) {</span>
+<span class="nc" id="L45">				sqle.printStackTrace(System.err);</span>
+			}
+		}
+
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		if (conn != null) {</span>
+			try {
+<span class="nc" id="L51">				conn.close();</span>
+<span class="nc" id="L52">			} catch (SQLException sqle) {</span>
+<span class="nc" id="L53">				sqle.printStackTrace(System.err);</span>
+			}
+		}
+
+<span class="nc" id="L57">	}</span>
+
+	@Override
+	public boolean storeMessage(Message message) {
+<span class="nc" id="L61">		String INSERT = &quot;INSERT INTO message(uuid, username, content, time) &quot; + &quot;VALUES(?,?,?,?)&quot;;</span>
+<span class="nc" id="L62">		Connection conn = null;</span>
+<span class="nc" id="L63">		PreparedStatement pstmt = null;</span>
+		try {
+<span class="nc" id="L65">			conn = getConnection();</span>
+<span class="nc" id="L66">			pstmt = conn.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS);</span>
+<span class="nc" id="L67">			pstmt.setString(1, message.get_uuid().toString());</span>
+<span class="nc" id="L68">			pstmt.setString(2, message.get_username());</span>
+<span class="nc" id="L69">			pstmt.setString(3, message.get_content());</span>
+<span class="nc" id="L70">			pstmt.setString(4, format.format(message.get_time()));</span>
+<span class="nc" id="L71">			pstmt.execute();</span>
+<span class="nc" id="L72">			return true;</span>
+<span class="nc" id="L73">		} catch (SQLException sqle) {</span>
+<span class="nc" id="L74">			sqle.printStackTrace(System.err);</span>
+		} finally {
+<span class="nc" id="L76">			closeStatementAndConnection(pstmt, conn);</span>
+		}
+<span class="nc" id="L78">		return false;</span>
+	}
+
+	@Override
+	public List&lt;Message&gt; queryMessageByUUID(UUID uuid) {
+<span class="nc" id="L83">		String SELECT = &quot;SELECT * FROM message WHERE uuid=(?)&quot;;</span>
+<span class="nc" id="L84">		List&lt;Message&gt; result_list = new ArrayList&lt;Message&gt;();</span>
+<span class="nc" id="L85">		Connection conn = null;</span>
+<span class="nc" id="L86">		PreparedStatement pstmt = null;</span>
+		try {
+<span class="nc" id="L88">			conn = getConnection();</span>
+<span class="nc" id="L89">			pstmt = conn.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);</span>
+<span class="nc" id="L90">			pstmt.setString(1, uuid.toString());</span>
+<span class="nc" id="L91">			ResultSet rs = pstmt.executeQuery();</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">			while (rs.next()) {</span>
+<span class="nc" id="L93">				Message temp_message = new Message(UUID.fromString(rs.getString(&quot;uuid&quot;)), rs.getString(&quot;username&quot;),</span>
+<span class="nc" id="L94">						rs.getString(&quot;content&quot;), format.parse(rs.getString(&quot;time&quot;)));</span>
+<span class="nc" id="L95">				result_list.add(temp_message);</span>
+			}
+<span class="nc" id="L97">		} catch (SQLException sqle) {</span>
+<span class="nc" id="L98">			sqle.printStackTrace(System.err);</span>
+<span class="nc" id="L99">		} catch (ParseException pe) {</span>
+<span class="nc" id="L100">			pe.printStackTrace(System.err);</span>
+		} finally {
+<span class="nc" id="L102">			closeStatementAndConnection(pstmt, conn);</span>
+		}
+<span class="nc" id="L104">		return result_list;</span>
+	}
+
+	@Override
+	public List&lt;Message&gt; queryMessage(int size, long millisec) {
+<span class="nc" id="L109">		String SELECT = &quot;SELECT TOP &quot; + size + &quot; * FROM message WHERE time &lt;= ? ORDER BY time DESC&quot;;</span>
+<span class="nc" id="L110">		List&lt;Message&gt; result_list = new ArrayList&lt;Message&gt;();</span>
+<span class="nc" id="L111">		Connection conn = null;</span>
+<span class="nc" id="L112">		PreparedStatement pstmt = null;</span>
+		try {
+<span class="nc" id="L114">			conn = getConnection();</span>
+<span class="nc" id="L115">			pstmt = conn.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);</span>
+<span class="nc" id="L116">			pstmt.setString(1, format.format(new Date(millisec)));</span>
+			// pstmt.setInt(2, size);
+<span class="nc" id="L118">			ResultSet rs = pstmt.executeQuery();</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">			while (rs.next()) {</span>
+<span class="nc" id="L120">				Message temp_message = new Message(UUID.fromString(rs.getString(&quot;uuid&quot;)), rs.getString(&quot;username&quot;),</span>
+<span class="nc" id="L121">						rs.getString(&quot;content&quot;), format.parse(rs.getString(&quot;time&quot;)));</span>
+<span class="nc" id="L122">				temp_message.set_ago(millisec);</span>
+<span class="nc" id="L123">				result_list.add(temp_message);</span>
+			}
+<span class="nc" id="L125">		} catch (SQLException sqle) {</span>
+<span class="nc" id="L126">			sqle.printStackTrace(System.err);</span>
+<span class="nc" id="L127">		} catch (ParseException pe) {</span>
+<span class="nc" id="L128">			pe.printStackTrace(System.err);</span>
+		} finally {
+<span class="nc" id="L130">			closeStatementAndConnection(pstmt, conn);</span>
+		}
+<span class="nc" id="L132">		return result_list;</span>
+	}
+
+	@Override
+	public int queryUpdates(long millisec) {
+<span class="nc" id="L137">		String formattedDate = format.format(new Date(millisec));</span>
+<span class="nc" id="L138">		String SELECT = &quot;SELECT COUNT(*) FROM message WHERE time &gt; ?&quot;;</span>
+<span class="nc" id="L139">		Connection conn = null;</span>
+<span class="nc" id="L140">		PreparedStatement pstmt = null;</span>
+		try {
+<span class="nc" id="L142">			conn = getConnection();</span>
+<span class="nc" id="L143">			pstmt = conn.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);</span>
+<span class="nc" id="L144">			pstmt.setString(1, formattedDate);</span>
+<span class="nc" id="L145">			ResultSet rs = pstmt.executeQuery();</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">			while (rs.next()) {</span>
+<span class="nc" id="L147">				return rs.getInt(1);</span>
+			}
+<span class="nc" id="L149">		} catch (SQLException sqle) {</span>
+<span class="nc" id="L150">			sqle.printStackTrace(System.err);</span>
+		} finally {
+<span class="nc" id="L152">			closeStatementAndConnection(pstmt, conn);</span>
+		}
+<span class="nc" id="L154">		return 0;</span>
+	}
+
+	@Override
+	public boolean clearTable() {
+<span class="nc" id="L159">		String DELETE = &quot;DELETE FROM message&quot;;</span>
+<span class="nc" id="L160">		Connection conn = null;</span>
+<span class="nc" id="L161">		PreparedStatement pstmt = null;</span>
+<span class="nc" id="L162">		boolean success = false;</span>
+		try {
+<span class="nc" id="L164">			conn = getConnection();</span>
+<span class="nc" id="L165">			pstmt = conn.prepareStatement(DELETE, Statement.RETURN_GENERATED_KEYS);</span>
+<span class="nc" id="L166">			pstmt.execute();</span>
+<span class="nc" id="L167">			success = true;</span>
+<span class="nc" id="L168">		} catch (SQLException sqle) {</span>
+<span class="nc" id="L169">			sqle.printStackTrace(System.err);</span>
+<span class="nc" id="L170">			success = false;</span>
+<span class="nc" id="L171">		} finally {</span>
+<span class="nc" id="L172">			closeStatementAndConnection(pstmt, conn);</span>
+<span class="nc" id="L173">			return success;</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>MessageMySQLDAOTest (Oct 26, 2019 10:00:56 PM)</div></body></html>

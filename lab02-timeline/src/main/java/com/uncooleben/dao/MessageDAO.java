@@ -15,4 +15,6 @@ public interface MessageDAO {
 
 	public int queryUpdates(long millisec);
 
+	public boolean clearTable();
+
 }

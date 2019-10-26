@@ -69,4 +69,29 @@ public class Message {
 		return "Message { username : " + this._username + " content : " + this._content + " date : " + this._time
 				+ " }";
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null)
+			return false;
+		if (!Message.class.isAssignableFrom(obj.getClass()))
+			return false;
+		final Message target = (Message) obj;
+		if (!this.get_uuid().equals(target.get_uuid())) {
+			return false;
+		}
+
+		if (!this.get_time().toString().equals(target.get_time().toString())) {
+			return false;
+		}
+
+		if (!this.get_username().equals(target.get_username())) {
+			return false;
+		}
+		if (!this.get_content().equals(target.get_content())) {
+			return false;
+		}
+		return true;
+
+	}
 }
