@@ -42,6 +42,10 @@
 			$("#id_error_message").html("<font color=\"red\">Username and content cannot be empty!</font>");
 			event.preventDefault();
 		}
+		if ($("#id_username").val().length>15 || $("#id_content").val().length>140) {
+			$("#id_error_message").html("<font color=\"red\">Username or content cannot be too long!(username <=15 and content<=140)</font>");
+			event.preventDefault();
+		}
 	};
 	$(window.documemt).ready(function() {
 		//alert(${lastRefreshTime});
