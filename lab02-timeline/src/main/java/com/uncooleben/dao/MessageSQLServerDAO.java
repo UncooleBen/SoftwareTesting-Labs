@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import com.uncooleben.model.Message;
@@ -94,10 +95,8 @@ public class MessageSQLServerDAO implements MessageDAO {
 						rs.getString("content"), format.parse(rs.getString("time")));
 				result_list.add(temp_message);
 			}
-		} catch (SQLException sqle) {
-			sqle.printStackTrace(System.err);
-		} catch (ParseException pe) {
-			pe.printStackTrace(System.err);
+		} catch (SQLException | ParseException e) {
+			e.printStackTrace(System.err);
 		} finally {
 			closeStatementAndConnection(pstmt, conn);
 		}

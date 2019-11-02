@@ -2,7 +2,7 @@
 <%@taglib  uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <html>
 <head>
-<title>Timeline</title>
+	<title>Timeline</title>
 <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.4.1.min.js"></script>
 <h1>Timeline Discussion Board</h1>
 </head>
@@ -80,7 +80,7 @@
 </div>
 <button id="id_more">More</button><br>
 
-<form id="id_new_message_form" action="newMessage" method="post" >
+<form id="id_new_message_form" action="newMessage" method="post" formenctype="multipart/form-data">
 	<table width="500">
 		<tr>
 			<td>Username</td>
@@ -96,6 +96,11 @@
 		<tr>
 			<td>
 				<textarea id="id_content" name="content" form="id_new_message_form" rows="5" cols="50"></textarea>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<input id="id_image" name="image" type="file" accept=".jpg"/>
 			</td>
 		</tr>
 		<tr>

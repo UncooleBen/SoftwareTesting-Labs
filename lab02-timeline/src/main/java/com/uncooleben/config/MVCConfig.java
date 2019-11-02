@@ -1,7 +1,9 @@
 package com.uncooleben.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
@@ -18,5 +20,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 @EnableWebMvc
 @ComponentScan({ "com.uncooleben" })
 public class MVCConfig extends WebMvcConfigurerAdapter {
-
+  @Bean(name = "multipartResolver")
+  public CommonsMultipartResolver multipartResolver()
+  {
+    CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
+    multipartResolver.setMaxUploadSize(20971520);	//Max size:20MB
+    return multipartResolver;
+  }
 }

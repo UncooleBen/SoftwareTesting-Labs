@@ -1,11 +1,21 @@
 package com.uncooleben.controller;
 
 import com.uncooleben.dao.MessageDBDAO;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.Date;
 
+import javax.servlet.http.HttpServletRequest;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.multipart.MultipartRequest;
+import org.springframework.web.multipart.MultipartResolver;
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.uncooleben.dao.MessageDAO;
@@ -41,14 +51,25 @@ public class NewMessageController {
 	 * 
 	 * @return A ModelAndView object of refresh of the current web page
 	 */
-	@RequestMapping("/newMessage")
-	public ModelAndView onSubmit(@RequestParam("username") String username, @RequestParam("content") String content) {
+	@RequestMapping(value = "/newMessage",method = RequestMethod.POST)
+	public ModelAndView onSubmit(@RequestParam("username") String username,
+			@RequestParam("content") String content/*,
+			@RequestParam(value = "image",required = false) MultipartFile image*/
+			) {
 		System.out.println("onSubmit()");
 		Message newMessage = new Message(username, content, new Date(System.currentTimeMillis()));
 		System.out.println(newMessage);
 		this.messageDAO.storeMessage(newMessage);
 		ModelAndView mv = new ModelAndView("redirect:/");
 		return mv;
+	}
+
+	@Bean(name = "multipartResolver")
+	public CommonsMultipartResolver multipartResolver()
+	{
+		CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
+		multipartResolver.setMaxUploadSize(20971520);	//Max size:20MB
+		return multipartResolver;
 	}
 
 }
