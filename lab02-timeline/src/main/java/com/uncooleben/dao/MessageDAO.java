@@ -4,17 +4,20 @@ import java.util.List;
 import java.util.UUID;
 
 import com.uncooleben.model.Message;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface MessageDAO {
 
-	public boolean storeMessage(Message message);
+	boolean storeMessage(Message message);
 
-	public List<Message> queryMessageByUUID(UUID uuid);
+	boolean storeMessage(Message message, MultipartFile image);
 
-	public List<Message> queryMessage(int size, long millisec);
+	List<Message> queryMessageByUUID(UUID uuid);
 
-	public int queryUpdates(long millisec);
+	List<Message> queryMessage(int size, long millisec);
 
-	public boolean clearTable();
+	int queryUpdates(long millisec);
+
+	boolean clearTable();
 
 }

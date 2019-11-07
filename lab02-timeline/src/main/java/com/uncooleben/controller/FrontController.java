@@ -1,5 +1,8 @@
 package com.uncooleben.controller;
 
+import java.io.File;
+import javax.servlet.MultipartConfigElement;
+import javax.servlet.ServletRegistration;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 import com.uncooleben.config.MVCConfig;
@@ -27,6 +30,12 @@ public class FrontController extends AbstractAnnotationConfigDispatcherServletIn
 	@Override
 	protected String[] getServletMappings() {
 		return new String[] { "/" };
+	}
+
+	@Override
+	protected void customizeRegistration(ServletRegistration.Dynamic registration) {
+		//上传，文件大小为2M，整个请求不超过4M，而且所有文件都要写入磁盘
+		registration.setMultipartConfig(new MultipartConfigElement("/",2097152,4194304,0));
 	}
 
 }

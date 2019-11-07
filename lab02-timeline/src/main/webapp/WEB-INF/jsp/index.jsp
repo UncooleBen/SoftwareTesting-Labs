@@ -80,7 +80,7 @@
 </div>
 <button id="id_more">More</button><br>
 
-<form id="id_new_message_form" action="newMessage" method="post" formenctype="multipart/form-data">
+<form id="id_new_message_form" action="newMessage" method="post" enctype="multipart/form-data">
 	<table width="500">
 		<tr>
 			<td>Username</td>

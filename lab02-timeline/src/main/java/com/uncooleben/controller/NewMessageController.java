@@ -53,23 +53,26 @@ public class NewMessageController {
 	 */
 	@RequestMapping(value = "/newMessage",method = RequestMethod.POST)
 	public ModelAndView onSubmit(@RequestParam("username") String username,
-			@RequestParam("content") String content/*,
-			@RequestParam(value = "image",required = false) MultipartFile image*/
+			@RequestParam("content") String content,
+			@RequestParam(value = "image",required = false) MultipartFile image
 			) {
 		System.out.println("onSubmit()");
+//		System.out.println(username);
+//		System.out.println(content);
+		System.out.println(image.getOriginalFilename());
+		System.out.println(image.getSize());
 		Message newMessage = new Message(username, content, new Date(System.currentTimeMillis()));
 		System.out.println(newMessage);
-		this.messageDAO.storeMessage(newMessage);
+		if(image.isEmpty())
+		{
+			this.messageDAO.storeMessage(newMessage);
+		}
+		else
+		{
+			this.messageDAO.storeMessage(newMessage,image);
+		}
 		ModelAndView mv = new ModelAndView("redirect:/");
 		return mv;
-	}
-
-	@Bean(name = "multipartResolver")
-	public CommonsMultipartResolver multipartResolver()
-	{
-		CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
-		multipartResolver.setMaxUploadSize(20971520);	//Max size:20MB
-		return multipartResolver;
 	}
 
 }

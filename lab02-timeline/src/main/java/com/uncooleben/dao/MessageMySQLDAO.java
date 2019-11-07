@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.uncooleben.model.Message;
+import org.springframework.web.multipart.MultipartFile;
 
 public class MessageMySQLDAO implements MessageDAO {
 
@@ -76,6 +77,11 @@ public class MessageMySQLDAO implements MessageDAO {
 		} finally {
 			closeStatementAndConnection(pstmt, conn);
 		}
+		return false;
+	}
+
+	@Override
+	public boolean storeMessage(Message message, MultipartFile image) {
 		return false;
 	}
 
