@@ -30,8 +30,8 @@
 					var tr2 = "<tr height=\"0\">";
 					var td21 =  "<td colspan=\"2\">" + json[i]["_content"] + "</td></tr>";
 					var tr3 = "<tr height=\"0\">";
-					var td31="<td colspan='2'>"+"<img src='file:///" +
-							json[i]["_path"] +"/"+ json[i]["_uuidstr"]+
+					var td31="<td colspan='2'>"+"<img src='http://localhost:8080/lab02_timeline_war/img/" +
+							json[i]["_uuidstr"]+
 							".jpg' alt='---Image here.---' width='192' height='108' />"+"</td></tr>";
 					var tr4 = "<tr><td colspan=\"2\"><hr></td></tr>";
 					if(json[i]["_path"]){
