@@ -12,13 +12,26 @@ public class Message {
 	private UUID _uuid;
 	private String _ago;
 	private static SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	private String _path;
+	private String _uuidstr;
 
 	public Message(String username, String content, Date time) {
 		this._content = content;
 		this._username = username;
 		this._time = time;
 		this._uuid = UUID.randomUUID();
+		this._uuidstr=this._uuid.toString();
 		this._ago = "Error";
+		this._path=null;
+	}
+
+	public Message(UUID uuid, String username, String content, Date time, String path) {
+		this._username = username;
+		this._content = content;
+		this._time = time;
+		this._uuid = uuid;
+		this._uuidstr=uuid.toString();
+		this._path = path;
 	}
 
 	public Message(UUID uuid, String username, String content, Date time) {
@@ -26,6 +39,8 @@ public class Message {
 		this._username = username;
 		this._time = time;
 		this._uuid = uuid;
+		this._uuidstr=uuid.toString();
+		this._path=null;
 	}
 
 	public String get_username() {
@@ -62,6 +77,10 @@ public class Message {
 
 	public String get_ago() {
 		return this._ago;
+	}
+
+	public void set_path(String _path) {
+		this._path = _path;
 	}
 
 	@Override

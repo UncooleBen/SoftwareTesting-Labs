@@ -29,8 +29,16 @@
 					var td12 = "<td width=\"150\">" + json[i]["_ago"] + "</td></tr>";
 					var tr2 = "<tr height=\"0\">";
 					var td21 =  "<td colspan=\"2\">" + json[i]["_content"] + "</td></tr>";
-					var tr3 = "<tr><td colspan=\"2\"><hr></td></tr>";
-					div_content += (tr1+td11+td12+tr2+td21+tr3);
+					var tr3 = "<tr height=\"0\">";
+					var td31="<td colspan='2'>"+"<img src='file:///" +
+							json[i]["_path"] +"/"+ json[i]["_uuidstr"]+
+							".jpg' alt='---Image here.---' width='192' height='108' />"+"</td></tr>";
+					var tr4 = "<tr><td colspan=\"2\"><hr></td></tr>";
+					if(json[i]["_path"]){
+						div_content+=(tr1+td11+td12+tr2+td21+tr3+td31+tr4);
+					}else{
+						div_content += (tr1+td11+td12+tr2+td21+tr4);
+					}
 				}
 				div_content = table_head + div_content + table_tail;
 				$("#id_dynamic_div").html(div_content);
