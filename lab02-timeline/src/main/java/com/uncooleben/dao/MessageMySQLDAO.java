@@ -1,5 +1,7 @@
 package com.uncooleben.dao;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -13,8 +15,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import com.uncooleben.model.Message;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.uncooleben.model.Message;
 
 public class MessageMySQLDAO implements MessageDAO {
 
@@ -82,6 +85,40 @@ public class MessageMySQLDAO implements MessageDAO {
 
 	@Override
 	public boolean storeMessage(Message message, MultipartFile image) {
+		String INSERT = "INSERT INTO message(uuid, username, content, time, withImage, path) " + "VALUES(?,?,?,?,1,?)";
+		String path = System.getenv("TEMP") + "\\timeline_imgs";
+		File dir = new File(path);
+		if (!dir.exists()) {
+			System.out.println("create dir");
+			dir.mkdir();
+		}
+		String filename = message.get_uuid().toString() + ".jpg";
+		File actualFile = new File(dir, filename);
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		try {
+			if (!actualFile.exists()) {
+				System.out.println("create file");
+				actualFile.createNewFile();
+			}
+			image.transferTo(actualFile);
+			conn = getConnection();
+			pstmt = conn.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS);
+			pstmt.setString(1, message.get_uuid().toString());
+			pstmt.setString(2, message.get_username());
+			pstmt.setString(3, message.get_content());
+			pstmt.setString(4, format.format(message.get_time()));
+			pstmt.setString(5, path);
+			pstmt.execute();
+			return true;
+		} catch (SQLException sqlE) {
+			sqlE.printStackTrace(System.err);
+		} catch (IOException ioE) {
+			ioE.printStackTrace(System.err);
+			System.out.println("Exception occurs during I/O.");
+		} finally {
+			closeStatementAndConnection(pstmt, conn);
+		}
 		return false;
 	}
 
