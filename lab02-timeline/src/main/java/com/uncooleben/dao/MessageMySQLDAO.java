@@ -83,22 +83,28 @@ public class MessageMySQLDAO implements MessageDAO {
 		return false;
 	}
 
+	protected File createFile(String path) {
+		return new File(path);
+	}
+
+	protected File createFile(File dir, String filename) {
+		return new File(dir, filename);
+	}
+
 	@Override
 	public boolean storeMessage(Message message, MultipartFile image) {
 		String INSERT = "INSERT INTO message(uuid, username, content, time, withImage, path) " + "VALUES(?,?,?,?,1,?)";
 		String path = System.getenv("TEMP") + "\\timeline_imgs";
-		File dir = new File(path);
+		File dir = createFile(path);
 		if (!dir.exists()) {
-			System.out.println("create dir");
 			dir.mkdir();
 		}
 		String filename = message.get_uuid().toString() + ".jpg";
-		File actualFile = new File(dir, filename);
+		File actualFile = createFile(dir, filename);
 		Connection conn = null;
 		PreparedStatement pstmt = null;
 		try {
 			if (!actualFile.exists()) {
-				System.out.println("create file");
 				actualFile.createNewFile();
 			}
 			image.transferTo(actualFile);
@@ -214,8 +220,8 @@ public class MessageMySQLDAO implements MessageDAO {
 			success = false;
 		} finally {
 			closeStatementAndConnection(pstmt, conn);
-			return success;
 		}
+		return success;
 	}
 
 }

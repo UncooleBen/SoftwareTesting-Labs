@@ -1,0 +1,570 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>MessageMySQLDAOTest.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">com.uncooleben.dao (Nov 8, 2019 11:51:39 PM)</a> &gt; <a href="../../index.html" class="el_group">lab02-timeline</a> &gt; <a href="../index.html" class="el_bundle">src/test/java</a> &gt; <a href="index.source.html" class="el_package">com.uncooleben.dao</a> &gt; <span class="el_source">MessageMySQLDAOTest.java</span></div><h1>MessageMySQLDAOTest.java</h1><pre class="source lang-java linenums"><span class="fc" id="L1">package com.uncooleben.dao;</span>
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.uncooleben.model.Message;
+
+<span class="fc" id="L45">public class MessageMySQLDAOTest {</span>
+
+<span class="fc" id="L47">	private Connection connection = mock(Connection.class);</span>
+<span class="fc" id="L48">	private PreparedStatement pstmt = mock(PreparedStatement.class);</span>
+	private MessageMySQLDAO messageDAO;
+	private long milliTime;
+	private SimpleDateFormat format;
+
+<span class="fc" id="L53">	class TestableMessageMySQLDAO extends MessageMySQLDAO {</span>
+
+		@Override
+		protected void loadDriver() {
+
+<span class="nc" id="L58">		}</span>
+
+		@Override
+		protected Connection getConnection() throws SQLException {
+<span class="fc" id="L62">			return connection;</span>
+		}
+	}
+
+	@BeforeEach
+	public void init() {
+<span class="fc" id="L68">		this.messageDAO = new TestableMessageMySQLDAO();</span>
+<span class="fc" id="L69">		this.milliTime = System.currentTimeMillis();</span>
+<span class="fc" id="L70">		this.format = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);</span>
+<span class="fc" id="L71">	}</span>
+
+	@Test
+	public void test_sql_exception_store_message() {
+<span class="fc" id="L75">		ByteArrayOutputStream outContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L76">		ByteArrayOutputStream errContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L77">		PrintStream originalOut = System.out;</span>
+<span class="fc" id="L78">		PrintStream originalErr = System.err;</span>
+<span class="fc" id="L79">		System.setOut(new PrintStream(outContent));</span>
+<span class="fc" id="L80">		System.setErr(new PrintStream(errContent));</span>
+<span class="fc" id="L81">		SQLException test_sqle = new SQLException();</span>
+		try {
+<span class="fc" id="L83">			when(connection.prepareStatement(anyString(), anyInt())).thenThrow(test_sqle);</span>
+<span class="pc" id="L84">		} catch (SQLException sqle) {</span>
+			// Won't throw any exception in this try/catch block
+<span class="nc" id="L86">			sqle.printStackTrace(System.err);</span>
+		}
+
+<span class="fc" id="L89">		this.messageDAO.storeMessage(null);</span>
+<span class="fc" id="L90">		assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L91">		System.setOut(originalOut);</span>
+<span class="fc" id="L92">		System.setErr(originalErr);</span>
+<span class="fc" id="L93">	}</span>
+
+	@Test
+	public void test_store_one_message() {
+<span class="fc" id="L97">		Date date = new Date(milliTime);</span>
+<span class="fc" id="L98">		Message message = new Message(&quot;james&quot;, &quot;im bond&quot;, date);</span>
+		// Creating argument captors for verification
+<span class="fc" id="L100">		ArgumentCaptor&lt;String&gt; stringArgumentCaptor = ArgumentCaptor.forClass(String.class);</span>
+		// Mocking behaviours
+		try {
+<span class="fc" id="L103">			when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);</span>
+<span class="pc" id="L104">		} catch (SQLException sqle) {</span>
+<span class="nc" id="L105">			sqle.printStackTrace(System.err);</span>
+		}
+		// Run the method
+<span class="fc" id="L108">		boolean succeeded = this.messageDAO.storeMessage(message);</span>
+		// Assertions
+<span class="fc" id="L110">		assertTrue(succeeded);</span>
+		try {
+<span class="fc" id="L112">			verify(pstmt, times(4)).setString(anyInt(), stringArgumentCaptor.capture());</span>
+<span class="fc" id="L113">			assertEquals(&quot;james&quot;, stringArgumentCaptor.getAllValues().get(1));</span>
+<span class="fc" id="L114">			assertEquals(&quot;im bond&quot;, stringArgumentCaptor.getAllValues().get(2));</span>
+<span class="pc" id="L115">		} catch (SQLException sqle) {</span>
+<span class="nc" id="L116">			sqle.printStackTrace(System.err);</span>
+<span class="nc" id="L117">			fail(&quot;Encountered SQLException when verifying arguments of pstmt, see below stack trace for detail.&quot;);</span>
+		}
+
+<span class="fc" id="L120">	}</span>
+
+	@Test
+	public void test_sql_exception_store_message_with_image() {
+<span class="fc" id="L124">		Date date = new Date(milliTime);</span>
+<span class="fc" id="L125">		Message message = new Message(&quot;james&quot;, &quot;im bond&quot;, date);</span>
+<span class="fc" id="L126">		SQLException test_sqle = new SQLException();</span>
+		// Spy the createFile method the shield the DAO from file system
+<span class="fc" id="L128">		this.messageDAO = Mockito.spy(new TestableMessageMySQLDAO());</span>
+		// Create mocks
+<span class="fc" id="L130">		File dir = mock(File.class);</span>
+<span class="fc" id="L131">		File f = mock(File.class);</span>
+<span class="fc" id="L132">		MultipartFile image = mock(MultipartFile.class);</span>
+		// Mocking behaviours
+<span class="fc" id="L134">		when(dir.exists()).thenReturn(true);</span>
+<span class="fc" id="L135">		when(f.exists()).thenReturn(true);</span>
+<span class="fc" id="L136">		doReturn(dir).when(this.messageDAO).createFile(anyString());</span>
+<span class="fc" id="L137">		doReturn(f).when(this.messageDAO).createFile(any(File.class), anyString());</span>
+		try {
+<span class="fc" id="L139">			when(connection.prepareStatement(anyString(), anyInt())).thenThrow(test_sqle);</span>
+<span class="pc" id="L140">		} catch (SQLException sqle) {</span>
+			// Won't throw any exception in this try/catch block
+<span class="nc" id="L142">			sqle.printStackTrace(System.err);</span>
+		}
+		// Run the method
+<span class="fc" id="L145">		ByteArrayOutputStream outContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L146">		ByteArrayOutputStream errContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L147">		PrintStream originalOut = System.out;</span>
+<span class="fc" id="L148">		PrintStream originalErr = System.err;</span>
+<span class="fc" id="L149">		System.setOut(new PrintStream(outContent));</span>
+<span class="fc" id="L150">		System.setErr(new PrintStream(errContent));</span>
+<span class="fc" id="L151">		this.messageDAO.storeMessage(message, image);</span>
+<span class="fc" id="L152">		assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L153">		System.setOut(originalOut);</span>
+<span class="fc" id="L154">		System.setErr(originalErr);</span>
+<span class="fc" id="L155">	}</span>
+
+	@Test
+	public void test_io_exception_store_message_with_image() {
+<span class="fc" id="L159">		Date date = new Date(milliTime);</span>
+<span class="fc" id="L160">		Message message = new Message(&quot;james&quot;, &quot;im bond&quot;, date);</span>
+<span class="fc" id="L161">		IOException test_ioe = new IOException();</span>
+		// Spy the createFile method the shield the DAO from file system
+<span class="fc" id="L163">		this.messageDAO = Mockito.spy(new TestableMessageMySQLDAO());</span>
+		// Create mocks
+<span class="fc" id="L165">		File dir = mock(File.class);</span>
+<span class="fc" id="L166">		File f = mock(File.class);</span>
+<span class="fc" id="L167">		MultipartFile image = mock(MultipartFile.class);</span>
+		// Mocking behaviours
+<span class="fc" id="L169">		when(dir.exists()).thenReturn(true);</span>
+<span class="fc" id="L170">		when(f.exists()).thenReturn(false);</span>
+<span class="fc" id="L171">		doReturn(dir).when(this.messageDAO).createFile(anyString());</span>
+<span class="fc" id="L172">		doReturn(f).when(this.messageDAO).createFile(any(File.class), anyString());</span>
+		try {
+<span class="fc" id="L174">			when(f.createNewFile()).thenThrow(test_ioe);</span>
+<span class="pc" id="L175">		} catch (IOException ioe) {</span>
+			// Won't throw any exception in this try/catch block
+<span class="nc" id="L177">			ioe.printStackTrace(System.err);</span>
+		}
+		// Run the method
+<span class="fc" id="L180">		ByteArrayOutputStream outContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L181">		ByteArrayOutputStream errContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L182">		PrintStream originalOut = System.out;</span>
+<span class="fc" id="L183">		PrintStream originalErr = System.err;</span>
+<span class="fc" id="L184">		System.setOut(new PrintStream(outContent));</span>
+<span class="fc" id="L185">		System.setErr(new PrintStream(errContent));</span>
+<span class="fc" id="L186">		this.messageDAO.storeMessage(message, image);</span>
+<span class="fc" id="L187">		assertTrue(errContent.toString().contains(&quot;java.io.IOException&quot;));</span>
+<span class="fc" id="L188">		System.setOut(originalOut);</span>
+<span class="fc" id="L189">		System.setErr(originalErr);</span>
+<span class="fc" id="L190">	}</span>
+
+	static Stream&lt;Arguments&gt; booleanAndBooleanProvider() {
+<span class="fc" id="L193">		return Stream.of(Arguments.of(true, true), Arguments.of(true, false), Arguments.of(false, true),</span>
+<span class="fc" id="L194">				Arguments.of(false, false));</span>
+	}
+
+	@ParameterizedTest
+	@MethodSource(&quot;booleanAndBooleanProvider&quot;)
+	public void test_store_message_with_image(boolean value1, boolean value2) {
+<span class="fc" id="L200">		Date date = new Date(milliTime);</span>
+<span class="fc" id="L201">		Message message = new Message(&quot;james&quot;, &quot;im bond&quot;, date);</span>
+		// Spy the createFile method the shield the DAO from file system
+<span class="fc" id="L203">		this.messageDAO = Mockito.spy(new TestableMessageMySQLDAO());</span>
+		// Create mocks
+<span class="fc" id="L205">		File dir = mock(File.class);</span>
+<span class="fc" id="L206">		File f = mock(File.class);</span>
+<span class="fc" id="L207">		MultipartFile image = mock(MultipartFile.class);</span>
+		// Mocking behaviours
+<span class="fc" id="L209">		when(dir.exists()).thenReturn(value1);</span>
+<span class="fc" id="L210">		when(f.exists()).thenReturn(value2);</span>
+<span class="fc" id="L211">		doReturn(dir).when(this.messageDAO).createFile(anyString());</span>
+<span class="fc" id="L212">		doReturn(f).when(this.messageDAO).createFile(any(File.class), anyString());</span>
+		try {
+<span class="fc" id="L214">			when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);</span>
+<span class="pc" id="L215">		} catch (SQLException sqle) {</span>
+<span class="nc" id="L216">			sqle.printStackTrace(System.err);</span>
+		}
+		// Run the method
+<span class="fc" id="L219">		boolean succeeded = this.messageDAO.storeMessage(message, image);</span>
+		// Assertions
+<span class="fc" id="L221">		assertTrue(succeeded);</span>
+<span class="fc" id="L222">		ArgumentCaptor&lt;String&gt; stringArgumentCaptor = ArgumentCaptor.forClass(String.class);</span>
+		try {
+<span class="fc" id="L224">			verify(pstmt, times(5)).setString(anyInt(), stringArgumentCaptor.capture());</span>
+<span class="fc" id="L225">			assertEquals(&quot;james&quot;, stringArgumentCaptor.getAllValues().get(1));</span>
+<span class="fc" id="L226">			assertEquals(&quot;im bond&quot;, stringArgumentCaptor.getAllValues().get(2));</span>
+<span class="pc" id="L227">		} catch (SQLException sqle) {</span>
+<span class="nc" id="L228">			sqle.printStackTrace(System.err);</span>
+<span class="nc" id="L229">			fail(&quot;Encountered SQLException when verifying arguments of pstmt, see below stack trace for detail.&quot;);</span>
+		}
+
+<span class="fc" id="L232">	}</span>
+
+	@Test
+	public void test_create_file() {
+<span class="fc" id="L236">		assertTrue(this.messageDAO.createFile(&quot;&quot;) instanceof File);</span>
+<span class="fc" id="L237">		assertTrue(this.messageDAO.createFile(new File(&quot;&quot;), &quot;&quot;) instanceof File);</span>
+<span class="fc" id="L238">	}</span>
+
+	@Test
+	public void test_sql_exception_query_by_uuid() {
+<span class="fc" id="L242">		ByteArrayOutputStream outContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L243">		ByteArrayOutputStream errContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L244">		PrintStream originalOut = System.out;</span>
+<span class="fc" id="L245">		PrintStream originalErr = System.err;</span>
+<span class="fc" id="L246">		System.setOut(new PrintStream(outContent));</span>
+<span class="fc" id="L247">		System.setErr(new PrintStream(errContent));</span>
+<span class="fc" id="L248">		SQLException test_sqle = new SQLException();</span>
+		try {
+<span class="fc" id="L250">			when(connection.prepareStatement(anyString(), anyInt())).thenThrow(test_sqle);</span>
+<span class="pc" id="L251">		} catch (SQLException sqle) {</span>
+			// Won't throw any exception in this try/catch block
+<span class="nc" id="L253">			sqle.printStackTrace(System.err);</span>
+		}
+
+<span class="fc" id="L256">		this.messageDAO.queryMessageByUUID(null);</span>
+<span class="fc" id="L257">		assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L258">		System.setOut(originalOut);</span>
+<span class="fc" id="L259">		System.setErr(originalErr);</span>
+<span class="fc" id="L260">	}</span>
+
+	@Test
+	public void test_parse_exception_query_by_uuid() {
+<span class="fc" id="L264">		ByteArrayOutputStream outContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L265">		ByteArrayOutputStream errContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L266">		PrintStream originalOut = System.out;</span>
+<span class="fc" id="L267">		PrintStream originalErr = System.err;</span>
+<span class="fc" id="L268">		System.setOut(new PrintStream(outContent));</span>
+<span class="fc" id="L269">		System.setErr(new PrintStream(errContent));</span>
+<span class="fc" id="L270">		UUID uuid = UUID.randomUUID();</span>
+<span class="fc" id="L271">		String uuid_str = uuid.toString();</span>
+<span class="fc" id="L272">		String username = &quot;james bond&quot;;</span>
+<span class="fc" id="L273">		String content = &quot;hello&quot;;</span>
+<span class="fc" id="L274">		String time = &quot;MALFORMED DATE STRING&quot;;</span>
+<span class="fc" id="L275">		ResultSet rs = mock(ResultSet.class);</span>
+		try {
+<span class="fc" id="L277">			when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);</span>
+<span class="fc" id="L278">			when(pstmt.executeQuery()).thenReturn(rs);</span>
+<span class="fc" id="L279">			when(rs.next()).thenReturn(true, false); // First call returns true, second call returns false</span>
+<span class="fc" id="L280">			when(rs.getString(&quot;uuid&quot;)).thenReturn(uuid_str);</span>
+<span class="fc" id="L281">			when(rs.getString(&quot;username&quot;)).thenReturn(username);</span>
+<span class="fc" id="L282">			when(rs.getString(&quot;content&quot;)).thenReturn(content);</span>
+<span class="fc" id="L283">			when(rs.getString(&quot;time&quot;)).thenReturn(time);</span>
+<span class="pc" id="L284">		} catch (SQLException sqle) {</span>
+			// Won't throw any exception in this try/catch block
+<span class="nc" id="L286">			sqle.printStackTrace(System.err);</span>
+		}
+<span class="fc" id="L288">		this.messageDAO.queryMessageByUUID(uuid);</span>
+<span class="fc" id="L289">		assertTrue(errContent.toString().contains(&quot;java.text.ParseException&quot;));</span>
+<span class="fc" id="L290">		System.setOut(originalOut);</span>
+<span class="fc" id="L291">		System.setErr(originalErr);</span>
+<span class="fc" id="L292">	}</span>
+
+	@Test
+	public void test_query_message_by_UUID() {
+<span class="fc" id="L296">		UUID uuid = UUID.randomUUID();</span>
+<span class="fc" id="L297">		String uuid_str = uuid.toString();</span>
+<span class="fc" id="L298">		String username = &quot;james bond&quot;;</span>
+<span class="fc" id="L299">		String content = &quot;hello&quot;;</span>
+<span class="fc" id="L300">		String time = this.format.format(new Date(this.milliTime));</span>
+<span class="fc" id="L301">		ResultSet rs = mock(ResultSet.class);</span>
+		try {
+<span class="fc" id="L303">			when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);</span>
+<span class="fc" id="L304">			when(pstmt.executeQuery()).thenReturn(rs);</span>
+<span class="fc" id="L305">			when(rs.next()).thenReturn(true, false); // First call returns true, second call returns false</span>
+<span class="fc" id="L306">			when(rs.getString(&quot;uuid&quot;)).thenReturn(uuid_str);</span>
+<span class="fc" id="L307">			when(rs.getString(&quot;username&quot;)).thenReturn(username);</span>
+<span class="fc" id="L308">			when(rs.getString(&quot;content&quot;)).thenReturn(content);</span>
+<span class="fc" id="L309">			when(rs.getString(&quot;time&quot;)).thenReturn(time);</span>
+<span class="pc" id="L310">		} catch (SQLException sqle) {</span>
+<span class="nc" id="L311">			sqle.printStackTrace(System.err);</span>
+		}
+<span class="fc" id="L313">		List&lt;Message&gt; result_list = this.messageDAO.queryMessageByUUID(uuid);</span>
+<span class="fc" id="L314">		assertEquals(1, result_list.size());</span>
+<span class="fc" id="L315">		Message result_message = result_list.get(0);</span>
+<span class="fc" id="L316">		assertEquals(uuid, result_message.get_uuid());</span>
+<span class="fc" id="L317">		assertEquals(username, result_message.get_username());</span>
+<span class="fc" id="L318">		assertEquals(content, result_message.get_content());</span>
+<span class="fc" id="L319">		assertEquals(time, format.format(result_message.get_time()));</span>
+		// Creating argument captors for verification
+<span class="fc" id="L321">		ArgumentCaptor&lt;String&gt; stringArgumentCaptor = ArgumentCaptor.forClass(String.class);</span>
+		try {
+<span class="fc" id="L323">			verify(pstmt, times(1)).setString(anyInt(), stringArgumentCaptor.capture());</span>
+<span class="fc" id="L324">			assertEquals(uuid_str, stringArgumentCaptor.getAllValues().get(0));</span>
+<span class="pc" id="L325">		} catch (SQLException sqle) {</span>
+<span class="nc" id="L326">			sqle.printStackTrace(System.err);</span>
+<span class="nc" id="L327">			fail(&quot;Encountered SQLException when verifying arguments of pstmt, see below stack trace for detail.&quot;);</span>
+		}
+
+<span class="fc" id="L330">	}</span>
+
+	@Test
+	public void test_sql_exception_query_message() {
+<span class="fc" id="L334">		ByteArrayOutputStream outContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L335">		ByteArrayOutputStream errContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L336">		PrintStream originalOut = System.out;</span>
+<span class="fc" id="L337">		PrintStream originalErr = System.err;</span>
+<span class="fc" id="L338">		System.setOut(new PrintStream(outContent));</span>
+<span class="fc" id="L339">		System.setErr(new PrintStream(errContent));</span>
+<span class="fc" id="L340">		SQLException test_sqle = new SQLException();</span>
+		try {
+<span class="fc" id="L342">			when(connection.prepareStatement(anyString(), anyInt())).thenThrow(test_sqle);</span>
+<span class="pc" id="L343">		} catch (SQLException sqle) {</span>
+			// Won't throw any exception in this try/catch block
+<span class="nc" id="L345">			sqle.printStackTrace(System.err);</span>
+		}
+
+<span class="fc" id="L348">		this.messageDAO.queryMessage(0, 0L);</span>
+<span class="fc" id="L349">		assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L350">		System.setOut(originalOut);</span>
+<span class="fc" id="L351">		System.setErr(originalErr);</span>
+<span class="fc" id="L352">	}</span>
+
+	@Test
+	public void test_parse_exception_query_message() {
+<span class="fc" id="L356">		ByteArrayOutputStream outContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L357">		ByteArrayOutputStream errContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L358">		PrintStream originalOut = System.out;</span>
+<span class="fc" id="L359">		PrintStream originalErr = System.err;</span>
+<span class="fc" id="L360">		System.setOut(new PrintStream(outContent));</span>
+<span class="fc" id="L361">		System.setErr(new PrintStream(errContent));</span>
+<span class="fc" id="L362">		UUID uuid = UUID.randomUUID();</span>
+<span class="fc" id="L363">		String uuid_str = uuid.toString();</span>
+<span class="fc" id="L364">		String username = &quot;james bond&quot;;</span>
+<span class="fc" id="L365">		String content = &quot;hello&quot;;</span>
+<span class="fc" id="L366">		String time = &quot;MALFORMED DATE STRING&quot;;</span>
+<span class="fc" id="L367">		ResultSet rs = mock(ResultSet.class);</span>
+		try {
+<span class="fc" id="L369">			when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);</span>
+<span class="fc" id="L370">			when(pstmt.executeQuery()).thenReturn(rs);</span>
+<span class="fc" id="L371">			when(rs.next()).thenReturn(true, false); // First call returns true, second call returns false</span>
+<span class="fc" id="L372">			when(rs.getString(&quot;uuid&quot;)).thenReturn(uuid_str);</span>
+<span class="fc" id="L373">			when(rs.getString(&quot;username&quot;)).thenReturn(username);</span>
+<span class="fc" id="L374">			when(rs.getString(&quot;content&quot;)).thenReturn(content);</span>
+<span class="fc" id="L375">			when(rs.getString(&quot;time&quot;)).thenReturn(time);</span>
+<span class="pc" id="L376">		} catch (SQLException sqle) {</span>
+			// Won't throw any exception in this try/catch block
+<span class="nc" id="L378">			sqle.printStackTrace(System.err);</span>
+		}
+<span class="fc" id="L380">		this.messageDAO.queryMessage(0, 0L);</span>
+<span class="fc" id="L381">		assertTrue(errContent.toString().contains(&quot;java.text.ParseException&quot;));</span>
+<span class="fc" id="L382">		System.setOut(originalOut);</span>
+<span class="fc" id="L383">		System.setErr(originalErr);</span>
+<span class="fc" id="L384">	}</span>
+
+	@Test
+	public void test_query_message() {
+<span class="fc" id="L388">		List&lt;Message&gt; expected = new ArrayList&lt;Message&gt;(5);</span>
+<span class="fc bfc" id="L389" title="All 2 branches covered.">		for (int index = 0; index &lt; 5; index++) {</span>
+<span class="fc" id="L390">			UUID uuid = UUID.randomUUID();</span>
+<span class="fc" id="L391">			String username = &quot;USER&quot; + UUID.randomUUID().toString();</span>
+<span class="fc" id="L392">			String content = &quot;CONTENT&quot; + UUID.randomUUID().toString();</span>
+<span class="fc" id="L393">			Date time = new Date(this.milliTime);</span>
+<span class="fc" id="L394">			Message newMessage = new Message(uuid, username, content, time);</span>
+<span class="fc" id="L395">			expected.add(newMessage);</span>
+		}
+<span class="fc" id="L397">		Supplier&lt;Stream&lt;String&gt;&gt; uuids = () -&gt; expected.stream().map(Message::get_uuid).map(UUID::toString);</span>
+<span class="fc" id="L398">		Supplier&lt;Stream&lt;String&gt;&gt; usernames = () -&gt; expected.stream().map(Message::get_username);</span>
+<span class="fc" id="L399">		Supplier&lt;Stream&lt;String&gt;&gt; contents = () -&gt; expected.stream().map(Message::get_content);</span>
+<span class="fc" id="L400">		Supplier&lt;Stream&lt;String&gt;&gt; times = () -&gt; expected.stream().map(Message::get_time)</span>
+<span class="fc" id="L401">				.map(date -&gt; (this.format.format(date)));</span>
+<span class="fc" id="L402">		ResultSet rs = mock(ResultSet.class);</span>
+		try {
+<span class="fc" id="L404">			when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);</span>
+<span class="fc" id="L405">			when(pstmt.executeQuery()).thenReturn(rs);</span>
+<span class="fc" id="L406">			when(rs.next()).thenReturn(true, new Boolean[] { true, true, true, true, false }); // First call returns</span>
+																								// true, second call
+																								// returns false
+<span class="fc" id="L409">			when(rs.getString(&quot;uuid&quot;)).thenReturn(uuids.get().findFirst().get(),</span>
+<span class="fc" id="L410">					uuids.get().skip(1).toArray(String[]::new));</span>
+<span class="fc" id="L411">			when(rs.getString(&quot;username&quot;)).thenReturn(usernames.get().findFirst().get(),</span>
+<span class="fc" id="L412">					usernames.get().skip(1).toArray(String[]::new));</span>
+<span class="fc" id="L413">			when(rs.getString(&quot;content&quot;)).thenReturn(contents.get().findFirst().get(),</span>
+<span class="fc" id="L414">					contents.get().skip(1).toArray(String[]::new));</span>
+<span class="fc" id="L415">			when(rs.getString(&quot;time&quot;)).thenReturn(times.get().findFirst().get(),</span>
+<span class="fc" id="L416">					times.get().skip(1).toArray(String[]::new));</span>
+<span class="pc" id="L417">		} catch (SQLException sqle) {</span>
+<span class="nc" id="L418">			sqle.printStackTrace(System.err);</span>
+		}
+<span class="fc" id="L420">		List&lt;Message&gt; actual = this.messageDAO.queryMessage(5, milliTime);</span>
+<span class="fc" id="L421">		assertEquals(5, actual.size());</span>
+<span class="fc bfc" id="L422" title="All 2 branches covered.">		for (int index = 0; index &lt; 5; ++index) {</span>
+<span class="fc" id="L423">			assertEquals(expected.get(index), actual.get(index));</span>
+		}
+		// Creating argument captors for verification
+<span class="fc" id="L426">		ArgumentCaptor&lt;String&gt; stringArgumentCaptor = ArgumentCaptor.forClass(String.class);</span>
+<span class="fc" id="L427">		ArgumentCaptor&lt;Integer&gt; integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);</span>
+		try {
+<span class="fc" id="L429">			verify(pstmt, times(1)).setString(eq(1), stringArgumentCaptor.capture());</span>
+<span class="fc" id="L430">			assertEquals(this.format.format(new Date(milliTime)), stringArgumentCaptor.getAllValues().get(0));</span>
+<span class="fc" id="L431">			verify(pstmt, times(1)).setInt(eq(2), integerArgumentCaptor.capture());</span>
+<span class="fc" id="L432">			assertEquals(5, integerArgumentCaptor.getAllValues().get(0));</span>
+<span class="pc" id="L433">		} catch (SQLException sqle) {</span>
+<span class="nc" id="L434">			sqle.printStackTrace(System.err);</span>
+<span class="nc" id="L435">			fail(&quot;Encountered SQLException when verifying arguments of pstmt, see below stack trace for detail.&quot;);</span>
+		}
+
+<span class="fc" id="L438">	}</span>
+
+	@Test
+	public void test_sql_exception_query_updates() {
+<span class="fc" id="L442">		ByteArrayOutputStream outContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L443">		ByteArrayOutputStream errContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L444">		PrintStream originalOut = System.out;</span>
+<span class="fc" id="L445">		PrintStream originalErr = System.err;</span>
+<span class="fc" id="L446">		System.setOut(new PrintStream(outContent));</span>
+<span class="fc" id="L447">		System.setErr(new PrintStream(errContent));</span>
+<span class="fc" id="L448">		SQLException test_sqle = new SQLException();</span>
+		try {
+<span class="fc" id="L450">			when(connection.prepareStatement(anyString(), anyInt())).thenThrow(test_sqle);</span>
+<span class="pc" id="L451">		} catch (SQLException sqle) {</span>
+			// Won't throw any exception in this try/catch block
+<span class="nc" id="L453">			sqle.printStackTrace(System.err);</span>
+		}
+
+<span class="fc" id="L456">		this.messageDAO.queryUpdates(0L);</span>
+<span class="fc" id="L457">		assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L458">		System.setOut(originalOut);</span>
+<span class="fc" id="L459">		System.setErr(originalErr);</span>
+<span class="fc" id="L460">	}</span>
+
+	@Test
+	public void test_query_updates() {
+<span class="fc" id="L464">		ResultSet rs = mock(ResultSet.class);</span>
+<span class="fc" id="L465">		int expected = 5;</span>
+		try {
+<span class="fc" id="L467">			when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);</span>
+<span class="fc" id="L468">			when(pstmt.executeQuery()).thenReturn(rs);</span>
+<span class="fc" id="L469">			when(rs.next()).thenReturn(true, false);</span>
+<span class="fc" id="L470">			when(rs.getInt(1)).thenReturn(expected);</span>
+<span class="pc" id="L471">		} catch (SQLException sqle) {</span>
+<span class="nc" id="L472">			sqle.printStackTrace(System.err);</span>
+		}
+<span class="fc" id="L474">		int actual = this.messageDAO.queryUpdates(milliTime);</span>
+<span class="fc" id="L475">		assertEquals(expected, actual);</span>
+		// Creating argument captors for verification
+<span class="fc" id="L477">		ArgumentCaptor&lt;String&gt; stringArgumentCaptor = ArgumentCaptor.forClass(String.class);</span>
+		try {
+<span class="fc" id="L479">			verify(pstmt, times(1)).setString(eq(1), stringArgumentCaptor.capture());</span>
+<span class="fc" id="L480">			assertEquals(this.format.format(new Date(milliTime)), stringArgumentCaptor.getAllValues().get(0));</span>
+<span class="pc" id="L481">		} catch (SQLException sqle) {</span>
+<span class="nc" id="L482">			sqle.printStackTrace(System.err);</span>
+<span class="nc" id="L483">			fail(&quot;Encountered SQLException when verifying arguments of pstmt, see below stack trace for detail.&quot;);</span>
+		}
+
+<span class="fc" id="L486">	}</span>
+
+	@Test
+	public void test_sql_exception_clear_table() {
+<span class="fc" id="L490">		ByteArrayOutputStream outContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L491">		ByteArrayOutputStream errContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L492">		PrintStream originalOut = System.out;</span>
+<span class="fc" id="L493">		PrintStream originalErr = System.err;</span>
+<span class="fc" id="L494">		System.setOut(new PrintStream(outContent));</span>
+<span class="fc" id="L495">		System.setErr(new PrintStream(errContent));</span>
+<span class="fc" id="L496">		SQLException test_sqle = new SQLException();</span>
+		try {
+<span class="fc" id="L498">			when(connection.prepareStatement(anyString(), anyInt())).thenThrow(test_sqle);</span>
+<span class="pc" id="L499">		} catch (SQLException sqle) {</span>
+			// Won't throw any exception in this try/catch block
+<span class="nc" id="L501">			sqle.printStackTrace(System.err);</span>
+		}
+
+<span class="fc" id="L504">		this.messageDAO.clearTable();</span>
+<span class="fc" id="L505">		assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L506">		System.setOut(originalOut);</span>
+<span class="fc" id="L507">		System.setErr(originalErr);</span>
+<span class="fc" id="L508">	}</span>
+
+	@Test
+	public void test_clear_table() {
+		try {
+<span class="fc" id="L513">			when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);</span>
+<span class="pc" id="L514">		} catch (SQLException sqle) {</span>
+<span class="nc" id="L515">			sqle.printStackTrace(System.err);</span>
+		}
+<span class="fc" id="L517">		boolean success = this.messageDAO.clearTable();</span>
+<span class="fc" id="L518">		assertTrue(success);</span>
+
+<span class="fc" id="L520">	}</span>
+
+	@Test
+	public void test_sql_exception_close_statement() {
+<span class="fc" id="L524">		ByteArrayOutputStream outContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L525">		ByteArrayOutputStream errContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L526">		PrintStream originalOut = System.out;</span>
+<span class="fc" id="L527">		PrintStream originalErr = System.err;</span>
+<span class="fc" id="L528">		System.setOut(new PrintStream(outContent));</span>
+<span class="fc" id="L529">		System.setErr(new PrintStream(errContent));</span>
+<span class="fc" id="L530">		SQLException test_sqle = new SQLException();</span>
+		try {
+<span class="fc" id="L532">			doThrow(test_sqle).when(pstmt).close();</span>
+<span class="pc" id="L533">		} catch (SQLException sqle) {</span>
+			// Won't throw any exception in this try/catch block
+<span class="nc" id="L535">			sqle.printStackTrace(System.err);</span>
+		}
+<span class="fc" id="L537">		this.messageDAO.closeStatementAndConnection(pstmt, connection);</span>
+<span class="fc" id="L538">		assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L539">		System.setOut(originalOut);</span>
+<span class="fc" id="L540">		System.setErr(originalErr);</span>
+<span class="fc" id="L541">	}</span>
+
+	@Test
+	public void test_sql_exception_close_connection() {
+<span class="fc" id="L545">		ByteArrayOutputStream outContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L546">		ByteArrayOutputStream errContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L547">		PrintStream originalOut = System.out;</span>
+<span class="fc" id="L548">		PrintStream originalErr = System.err;</span>
+<span class="fc" id="L549">		System.setOut(new PrintStream(outContent));</span>
+<span class="fc" id="L550">		System.setErr(new PrintStream(errContent));</span>
+<span class="fc" id="L551">		SQLException test_sqle = new SQLException();</span>
+		try {
+<span class="fc" id="L553">			doThrow(test_sqle).when(connection).close();</span>
+<span class="pc" id="L554">		} catch (SQLException sqle) {</span>
+			// Won't throw any exception in this try/catch block
+<span class="nc" id="L556">			sqle.printStackTrace(System.err);</span>
+		}
+<span class="fc" id="L558">		this.messageDAO.closeStatementAndConnection(pstmt, connection);</span>
+<span class="fc" id="L559">		assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L560">		System.setOut(originalOut);</span>
+<span class="fc" id="L561">		System.setErr(originalErr);</span>
+<span class="fc" id="L562">	}</span>
+
+	@AfterEach
+	public void last() {
+
+<span class="fc" id="L567">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span>com.uncooleben.dao (Nov 8, 2019 11:51:39 PM)</div></body></html>
