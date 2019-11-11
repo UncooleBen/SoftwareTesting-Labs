@@ -20,9 +20,9 @@ public class Message {
 		this._username = username;
 		this._time = time;
 		this._uuid = UUID.randomUUID();
-		this._uuidstr=this._uuid.toString();
+		this._uuidstr = this._uuid.toString();
 		this._ago = "Error";
-		this._path=null;
+		this._path = null;
 	}
 
 	public Message(UUID uuid, String username, String content, Date time, String path) {
@@ -30,7 +30,7 @@ public class Message {
 		this._content = content;
 		this._time = time;
 		this._uuid = uuid;
-		this._uuidstr=uuid.toString();
+		this._uuidstr = uuid.toString();
 		this._path = path;
 	}
 
@@ -39,8 +39,8 @@ public class Message {
 		this._username = username;
 		this._time = time;
 		this._uuid = uuid;
-		this._uuidstr=uuid.toString();
-		this._path=null;
+		this._uuidstr = uuid.toString();
+		this._path = null;
 	}
 
 	public String get_username() {
@@ -57,6 +57,14 @@ public class Message {
 
 	public UUID get_uuid() {
 		return this._uuid;
+	}
+
+	public String get_path() {
+		return this._path;
+	}
+
+	public String get_uuidstr() {
+		return this._uuidstr;
 	}
 
 	public void set_ago(long millisec) {

@@ -1,13 +1,11 @@
 package com.uncooleben.controller;
 
-import com.uncooleben.dao.MessageDBDAO;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.uncooleben.dao.MessageDAO;
-import com.uncooleben.dao.MessageMySQLDAO;
-import com.uncooleben.dao.MessageDBDAO;
 
 /**
  * This class is a part of Software-Testing lab02 timeline.
@@ -21,14 +19,8 @@ import com.uncooleben.dao.MessageDBDAO;
 @Controller
 public class IndexController {
 
-	private MessageDAO messageDAO;
-
-	/**
-	 * Constructor of this class
-	 */
-	public IndexController() {
-		this.messageDAO = (new MessageDBDAO()).getActualDAO();
-	}
+	@Autowired
+	MessageDAO messageDAO;
 
 	/**
 	 * Redirect the user to the ModelAndView of index.jsp. Sets the lastRefreshTime

@@ -3,9 +3,11 @@ package com.uncooleben.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
+
+import com.uncooleben.dao.MessageDAO;
+import com.uncooleben.dao.MessageDBDAO;
 
 /**
  * This class is a part of Software-Testing lab02 timeline.
@@ -27,9 +29,15 @@ public class DispatcherConfig {
 		vr.setSuffix(".jsp");
 		return vr;
 	}
+
 	@Bean(name = "multipartResolver")
-	public StandardServletMultipartResolver getStandardServletMultipartResolver(){
+	public StandardServletMultipartResolver getStandardServletMultipartResolver() {
 		return new StandardServletMultipartResolver();
+	}
+
+	@Bean(name = "messageDAO")
+	public MessageDAO getMessageDAO() {
+		return (new MessageDBDAO().getActualDAO());
 	}
 
 }
