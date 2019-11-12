@@ -45,8 +45,10 @@ public class NewMessageController {
 		Message newMessage = new Message(username, content, new Date(System.currentTimeMillis()));
 		if (image.isEmpty()) {
 			this.messageDAO.storeMessage(newMessage, false);
+			System.out.println("1");
 		} else {
 			this.messageDAO.storeMessage(newMessage, true);
+			System.out.println("2");
 			this.fao.storeImage(newMessage, image);
 		}
 		ModelAndView mv = new ModelAndView("redirect:/");

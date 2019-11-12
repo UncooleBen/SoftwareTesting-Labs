@@ -26,6 +26,7 @@ public class ImageController {
 		String[] url = request.getRequestURL().toString().split("/");
 		String filename = url[url.length - 1];
 		System.out.println(filename);
+		System.out.println("111");
 		return this.fao.convertToByteArray(filename);
 	}
 
