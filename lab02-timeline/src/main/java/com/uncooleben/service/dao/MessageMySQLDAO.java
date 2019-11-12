@@ -38,7 +38,7 @@ public class MessageMySQLDAO implements MessageDAO {
 		return conn;
 	}
 
-	protected void closeStatementAndConnection(PreparedStatement pstmt, Connection conn) {
+	public void closeStatementAndConnection(PreparedStatement pstmt, Connection conn) {
 		if (pstmt != null) {
 			try {
 				pstmt.close();

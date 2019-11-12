@@ -3,11 +3,9 @@ package com.uncooleben.dao;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -15,8 +13,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -33,12 +29,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.uncooleben.model.Message;
 import com.uncooleben.service.dao.MessageMySQLDAO;
@@ -87,18 +78,19 @@ public class MessageMySQLDAOTest {
 			sqle.printStackTrace(System.err);
 		}
 
-		this.messageDAO.storeMessage(null);
+		this.messageDAO.storeMessage(null, false);
 		assertTrue(errContent.toString().contains("java.sql.SQLException"));
 		System.setOut(originalOut);
 		System.setErr(originalErr);
 	}
 
 	@Test
-	public void test_store_one_message() {
+	public void test_store_one_message_without_image() {
 		Date date = new Date(milliTime);
 		Message message = new Message("james", "im bond", date);
 		// Creating argument captors for verification
 		ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
+		ArgumentCaptor<Boolean> booleanArgumentCaptor = ArgumentCaptor.forClass(Boolean.class);
 		// Mocking behaviours
 		try {
 			when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);
@@ -106,125 +98,16 @@ public class MessageMySQLDAOTest {
 			sqle.printStackTrace(System.err);
 		}
 		// Run the method
-		boolean succeeded = this.messageDAO.storeMessage(message);
+		boolean succeeded = this.messageDAO.storeMessage(message, false);
 		// Assertions
 		assertTrue(succeeded);
-		try {
-			verify(pstmt, times(4)).setString(anyInt(), stringArgumentCaptor.capture());
-			assertEquals("james", stringArgumentCaptor.getAllValues().get(1));
-			assertEquals("im bond", stringArgumentCaptor.getAllValues().get(2));
-		} catch (SQLException sqle) {
-			sqle.printStackTrace(System.err);
-			fail("Encountered SQLException when verifying arguments of pstmt, see below stack trace for detail.");
-		}
-
-	}
-
-	@Test
-	public void test_sql_exception_store_message_with_image() {
-		Date date = new Date(milliTime);
-		Message message = new Message("james", "im bond", date);
-		SQLException test_sqle = new SQLException();
-		// Spy the createFile method the shield the DAO from file system
-		this.messageDAO = Mockito.spy(new TestableMessageMySQLDAO());
-		// Create mocks
-		File dir = mock(File.class);
-		File f = mock(File.class);
-		MultipartFile image = mock(MultipartFile.class);
-		// Mocking behaviours
-		when(dir.exists()).thenReturn(true);
-		when(f.exists()).thenReturn(true);
-		doReturn(dir).when(this.messageDAO).createFile(anyString());
-		doReturn(f).when(this.messageDAO).createFile(any(File.class), anyString());
-		try {
-			when(connection.prepareStatement(anyString(), anyInt())).thenThrow(test_sqle);
-		} catch (SQLException sqle) {
-			// Won't throw any exception in this try/catch block
-			sqle.printStackTrace(System.err);
-		}
-		// Run the method
-		ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-		ByteArrayOutputStream errContent = new ByteArrayOutputStream();
-		PrintStream originalOut = System.out;
-		PrintStream originalErr = System.err;
-		System.setOut(new PrintStream(outContent));
-		System.setErr(new PrintStream(errContent));
-		this.messageDAO.storeMessage(message, image);
-		assertTrue(errContent.toString().contains("java.sql.SQLException"));
-		System.setOut(originalOut);
-		System.setErr(originalErr);
-	}
-
-	@Test
-	public void test_io_exception_store_message_with_image() {
-		Date date = new Date(milliTime);
-		Message message = new Message("james", "im bond", date);
-		IOException test_ioe = new IOException();
-		// Spy the createFile method the shield the DAO from file system
-		this.messageDAO = Mockito.spy(new TestableMessageMySQLDAO());
-		// Create mocks
-		File dir = mock(File.class);
-		File f = mock(File.class);
-		MultipartFile image = mock(MultipartFile.class);
-		// Mocking behaviours
-		when(dir.exists()).thenReturn(true);
-		when(f.exists()).thenReturn(false);
-		doReturn(dir).when(this.messageDAO).createFile(anyString());
-		doReturn(f).when(this.messageDAO).createFile(any(File.class), anyString());
-		try {
-			when(f.createNewFile()).thenThrow(test_ioe);
-		} catch (IOException ioe) {
-			// Won't throw any exception in this try/catch block
-			ioe.printStackTrace(System.err);
-		}
-		// Run the method
-		ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-		ByteArrayOutputStream errContent = new ByteArrayOutputStream();
-		PrintStream originalOut = System.out;
-		PrintStream originalErr = System.err;
-		System.setOut(new PrintStream(outContent));
-		System.setErr(new PrintStream(errContent));
-		this.messageDAO.storeMessage(message, image);
-		assertTrue(errContent.toString().contains("java.io.IOException"));
-		System.setOut(originalOut);
-		System.setErr(originalErr);
-	}
-
-	static Stream<Arguments> booleanAndBooleanProvider() {
-		return Stream.of(Arguments.of(true, true), Arguments.of(true, false), Arguments.of(false, true),
-				Arguments.of(false, false));
-	}
-
-	@ParameterizedTest
-	@MethodSource("booleanAndBooleanProvider")
-	public void test_store_message_with_image(boolean value1, boolean value2) {
-		Date date = new Date(milliTime);
-		Message message = new Message("james", "im bond", date);
-		// Spy the createFile method the shield the DAO from file system
-		this.messageDAO = Mockito.spy(new TestableMessageMySQLDAO());
-		// Create mocks
-		File dir = mock(File.class);
-		File f = mock(File.class);
-		MultipartFile image = mock(MultipartFile.class);
-		// Mocking behaviours
-		when(dir.exists()).thenReturn(value1);
-		when(f.exists()).thenReturn(value2);
-		doReturn(dir).when(this.messageDAO).createFile(anyString());
-		doReturn(f).when(this.messageDAO).createFile(any(File.class), anyString());
-		try {
-			when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);
-		} catch (SQLException sqle) {
-			sqle.printStackTrace(System.err);
-		}
-		// Run the method
-		boolean succeeded = this.messageDAO.storeMessage(message, image);
-		// Assertions
-		assertTrue(succeeded);
-		ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
 		try {
 			verify(pstmt, times(5)).setString(anyInt(), stringArgumentCaptor.capture());
+			verify(pstmt, times(1)).setBoolean(anyInt(), booleanArgumentCaptor.capture());
 			assertEquals("james", stringArgumentCaptor.getAllValues().get(1));
 			assertEquals("im bond", stringArgumentCaptor.getAllValues().get(2));
+			assertEquals(null, stringArgumentCaptor.getAllValues().get(4));
+			assertEquals(false, booleanArgumentCaptor.getAllValues().get(0));
 		} catch (SQLException sqle) {
 			sqle.printStackTrace(System.err);
 			fail("Encountered SQLException when verifying arguments of pstmt, see below stack trace for detail.");
@@ -233,9 +116,34 @@ public class MessageMySQLDAOTest {
 	}
 
 	@Test
-	public void test_create_file() {
-		assertTrue(this.messageDAO.createFile("") instanceof File);
-		assertTrue(this.messageDAO.createFile(new File(""), "") instanceof File);
+	public void test_store_one_message_with_image() {
+		Date date = new Date(milliTime);
+		Message message = new Message("james", "im bond", date);
+		// Creating argument captors for verification
+		ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
+		ArgumentCaptor<Boolean> booleanArgumentCaptor = ArgumentCaptor.forClass(Boolean.class);
+		// Mocking behaviours
+		try {
+			when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);
+		} catch (SQLException sqle) {
+			sqle.printStackTrace(System.err);
+		}
+		// Run the method
+		boolean succeeded = this.messageDAO.storeMessage(message, true);
+		// Assertions
+		assertTrue(succeeded);
+		try {
+			verify(pstmt, times(5)).setString(anyInt(), stringArgumentCaptor.capture());
+			verify(pstmt, times(1)).setBoolean(anyInt(), booleanArgumentCaptor.capture());
+			assertEquals("james", stringArgumentCaptor.getAllValues().get(1));
+			assertEquals("im bond", stringArgumentCaptor.getAllValues().get(2));
+			assertEquals(System.getenv("TEMP") + "\\timeline_imgs", stringArgumentCaptor.getAllValues().get(4));
+			assertEquals(true, booleanArgumentCaptor.getAllValues().get(0));
+		} catch (SQLException sqle) {
+			sqle.printStackTrace(System.err);
+			fail("Encountered SQLException when verifying arguments of pstmt, see below stack trace for detail.");
+		}
+
 	}
 
 	@Test
