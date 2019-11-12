@@ -1,12 +1,15 @@
 package com.uncooleben.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.uncooleben.model.Message;
 import com.uncooleben.service.dao.MessageDAO;
 
 class NewMessageControllerTest {
@@ -17,10 +20,8 @@ class NewMessageControllerTest {
 	@Test
 	void test_onSubmit() {
 		newmessageController.messageDAO = messageDAO;
-
 		ModelAndView result = newmessageController.onSubmit("彭钧涛", "彭哥牛逼", null);
-		verify(messageDAO).storeMessage(any(Message.class));
-
+		verify(messageDAO).storeMessage(any(Message.class), anyBoolean());
 		assertEquals(result.getViewName(), "redirect:/");
 	}
 

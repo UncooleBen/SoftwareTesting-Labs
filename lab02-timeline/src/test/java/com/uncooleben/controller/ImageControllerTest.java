@@ -12,13 +12,13 @@ import org.junit.jupiter.api.Test;
 class ImageControllerTest {
 
 	@Test
-	void test_testphoto() throws IOException {
+	void test_get_requested_image() throws IOException {
 		HttpServletRequest request = mock(HttpServletRequest.class);
 		StringBuffer urlbuffer = new StringBuffer("http://localhost:8080/jqueryLearn/resources/request.jsp");
 		when(request.getRequestURL()).thenReturn(urlbuffer);
 
 		ImageController imageController = new ImageController();
-		imageController.testphoto(request);
+		imageController.getRequestedImage(request);
 	}
 
 }
