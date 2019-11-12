@@ -3,9 +3,13 @@ package com.uncooleben.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
+
+import com.uncooleben.service.dao.MessageDAO;
+import com.uncooleben.service.dao.MessageDBDAO;
+import com.uncooleben.service.file.FAO;
+import com.uncooleben.service.file.FAOImpl;
 
 /**
  * This class is a part of Software-Testing lab02 timeline.
@@ -18,7 +22,7 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
  */
 @Configuration
 @ComponentScan({ "com.uncooleben" })
-public class DispatcherConfig {
+public class ResourceConfig {
 
 	@Bean
 	public InternalResourceViewResolver viewResolver() {
@@ -27,9 +31,20 @@ public class DispatcherConfig {
 		vr.setSuffix(".jsp");
 		return vr;
 	}
+
 	@Bean(name = "multipartResolver")
-	public StandardServletMultipartResolver getStandardServletMultipartResolver(){
+	public StandardServletMultipartResolver getStandardServletMultipartResolver() {
 		return new StandardServletMultipartResolver();
+	}
+
+	@Bean(name = "messageDAO")
+	public MessageDAO getMessageDAO() {
+		return (new MessageDBDAO().getActualDAO());
+	}
+
+	@Bean(name = "fao")
+	public FAO getFAO() {
+		return new FAOImpl();
 	}
 
 }

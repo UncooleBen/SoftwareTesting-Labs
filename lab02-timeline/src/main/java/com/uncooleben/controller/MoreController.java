@@ -1,16 +1,15 @@
 package com.uncooleben.controller;
 
-import com.uncooleben.dao.MessageDBDAO;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.google.gson.Gson;
-import com.uncooleben.dao.MessageDAO;
-import com.uncooleben.dao.MessageMySQLDAO;
 import com.uncooleben.model.Message;
+import com.uncooleben.service.dao.MessageDAO;
 
 /**
  * This class is a part of Software-Testing lab02 timeline.
@@ -24,14 +23,8 @@ import com.uncooleben.model.Message;
 @Controller
 public class MoreController {
 
-	private MessageDAO messageDAO;
-
-	/**
-	 * Constructor
-	 */
-	public MoreController() {
-		this.messageDAO = (new MessageDBDAO()).getActualDAO();
-	}
+	@Autowired
+	MessageDAO messageDAO;
 
 	/**
 	 * This method query three more messages from database according to the

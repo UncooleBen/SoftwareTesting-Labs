@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -15,7 +17,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.uncooleben.model.Message;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -30,11 +31,15 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.uncooleben.model.Message;
+import com.uncooleben.service.dao.MessageSQLServerDAO;
 
 public class MessageSQLServerDAOTest {
   private MessageSQLServerDAO messageDAO;
@@ -55,20 +60,21 @@ public class MessageSQLServerDAOTest {
   private final String TEST_UUID2 = "0-0-0-0-1";
   private final String TEST_TIME2 = "2019-10-30 08:00:00";
 
-  class MessageSQLServerDAOFake extends MessageSQLServerDAO {
-    @Override
-    protected void loadDriver() {}
+	class MessageSQLServerDAOFake extends MessageSQLServerDAO {
+		@Override
+		protected void loadDriver() {
+		}
 
-    @Override
-    protected Connection getConnection() {
-      return connection;
-    }
-  }
+		@Override
+		protected Connection getConnection() {
+			return connection;
+		}
+	}
 
-  @BeforeEach
-  void init() {
-    messageDAO = new MessageSQLServerDAOFake();
-  }
+	@BeforeEach
+	void init() {
+		messageDAO = new MessageSQLServerDAOFake();
+	}
 
   @Test
   void testStoreNullMessageWithoutImageThrowsException() {
@@ -267,95 +273,95 @@ public class MessageSQLServerDAOTest {
     }
   }
 
-  @Test
-  void testQueryMessageByNullUUIDThrowsException() {
-    assertThrows(NullPointerException.class, () -> messageDAO.queryMessageByUUID(null));
-  }
+	@Test
+	void testQueryMessageByNullUUIDThrowsException() {
+		assertThrows(NullPointerException.class, () -> messageDAO.queryMessageByUUID(null));
+	}
 
-  @Test
-  void testQueryMessageByUUIDThrowsSQLExceptionWhenPreparingStatement() {
-    // Change error output stream to capture error output
-    ByteArrayOutputStream errContent = new ByteArrayOutputStream();
-    PrintStream originalErr = System.err;
-    System.setErr(new PrintStream(errContent));
-    // Stub
-    try {
-      when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);
-    } catch (SQLException sqlE) {
-      System.out.println(sqlE.getMessage());
-      fail("Exception occurs when stubbing.");
-    }
-    // Test return value
-    List<Message> resultList = messageDAO.queryMessageByUUID(UUID.fromString(TEST_UUID));
-    assertTrue(resultList.isEmpty()); // resultList should be empty
-    // Test error output
-    assertTrue(errContent.toString().contains("java.sql.SQLException"));
-    // Change error output stream back to default
-    System.setErr(originalErr);
-  }
+	@Test
+	void testQueryMessageByUUIDThrowsSQLExceptionWhenPreparingStatement() {
+		// Change error output stream to capture error output
+		ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+		PrintStream originalErr = System.err;
+		System.setErr(new PrintStream(errContent));
+		// Stub
+		try {
+			when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);
+		} catch (SQLException sqlE) {
+			System.out.println(sqlE.getMessage());
+			fail("Exception occurs when stubbing.");
+		}
+		// Test return value
+		List<Message> resultList = messageDAO.queryMessageByUUID(UUID.fromString(TEST_UUID));
+		assertTrue(resultList.isEmpty()); // resultList should be empty
+		// Test error output
+		assertTrue(errContent.toString().contains("java.sql.SQLException"));
+		// Change error output stream back to default
+		System.setErr(originalErr);
+	}
 
-  @Test
-  void testQueryMessageByUUIDThrowsSQLExceptionWhenExecutingQuery() {
-    // Change error output stream to capture error output
-    ByteArrayOutputStream errContent = new ByteArrayOutputStream();
-    PrintStream originalErr = System.err;
-    System.setErr(new PrintStream(errContent));
-    // Stub
-    try {
-      when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);
-      when(pstmt.executeQuery()).thenThrow(SQLException.class);
-    } catch (SQLException sqlE) {
-      System.out.println(sqlE.getMessage());
-      fail("Exception occurs when stubbing.");
-    }
-    // Test return value
-    List<Message> resultList = messageDAO.queryMessageByUUID(UUID.fromString(TEST_UUID));
-    assertTrue(resultList.isEmpty()); // resultList should be empty
-    // Test error output
-    assertTrue(errContent.toString().contains("java.sql.SQLException"));
-    // Change error output stream back to default
-    System.setErr(originalErr);
-  }
+	@Test
+	void testQueryMessageByUUIDThrowsSQLExceptionWhenExecutingQuery() {
+		// Change error output stream to capture error output
+		ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+		PrintStream originalErr = System.err;
+		System.setErr(new PrintStream(errContent));
+		// Stub
+		try {
+			when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);
+			when(pstmt.executeQuery()).thenThrow(SQLException.class);
+		} catch (SQLException sqlE) {
+			System.out.println(sqlE.getMessage());
+			fail("Exception occurs when stubbing.");
+		}
+		// Test return value
+		List<Message> resultList = messageDAO.queryMessageByUUID(UUID.fromString(TEST_UUID));
+		assertTrue(resultList.isEmpty()); // resultList should be empty
+		// Test error output
+		assertTrue(errContent.toString().contains("java.sql.SQLException"));
+		// Change error output stream back to default
+		System.setErr(originalErr);
+	}
 
-  @Test
-  void testQueryMessageWithSize1AndMillisec1572364800000() {
-    String SELECT = "SELECT TOP 1 * FROM message WHERE time <= ? ORDER BY time DESC";
-    // Stub
-    try {
-      when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);
-      when(pstmt.executeQuery()).thenReturn(rs);
-      when(rs.next()).thenReturn(true, false); // rs has only 1 item
-      when(rs.getString("uuid")).thenReturn(TEST_UUID);
-      when(rs.getString("username")).thenReturn(TEST_USERNAME);
-      when(rs.getString("content")).thenReturn(TEST_CONTENT);
-      when(rs.getString("time")).thenReturn(TEST_TIME);
-    } catch (SQLException sqlE) {
-      System.out.println(sqlE.getMessage());
-      fail("Exception occurs when stubbing");
-    }
-    // Test return value
-    List<Message> resultList = messageDAO.queryMessage(1, TEST_MILLISEC);
-    assertEquals(1, resultList.size());
-    assertEquals(UUID.fromString(TEST_UUID), resultList.get(0).get_uuid());
-    assertEquals(TEST_USERNAME, resultList.get(0).get_username());
-    assertEquals(TEST_CONTENT, resultList.get(0).get_content());
-    assertEquals(TEST_TIME, dateFormatter.format(resultList.get(0).get_time()));
-    // Test function calls' order
-    InOrder order = inOrder(connection, pstmt, rs);
-    try {
-      order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);
-      order.verify(pstmt).executeQuery();
-      order.verify(rs).next();
-      order.verify(rs, times(4)).getString(anyString());
-      order.verify(rs).next();
-      order.verify(pstmt).close();
-      order.verify(connection).close();
-      order.verifyNoMoreInteractions();
-    } catch (SQLException sqlE) {
-      System.out.println(sqlE.getMessage());
-      fail("Exception occurs when testing function calls' order");
-    }
-  }
+	@Test
+	void testQueryMessageWithSize1AndMillisec1572364800000() {
+		String SELECT = "SELECT TOP 1 * FROM message WHERE time <= ? ORDER BY time DESC";
+		// Stub
+		try {
+			when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);
+			when(pstmt.executeQuery()).thenReturn(rs);
+			when(rs.next()).thenReturn(true, false); // rs has only 1 item
+			when(rs.getString("uuid")).thenReturn(TEST_UUID);
+			when(rs.getString("username")).thenReturn(TEST_USERNAME);
+			when(rs.getString("content")).thenReturn(TEST_CONTENT);
+			when(rs.getString("time")).thenReturn(TEST_TIME);
+		} catch (SQLException sqlE) {
+			System.out.println(sqlE.getMessage());
+			fail("Exception occurs when stubbing");
+		}
+		// Test return value
+		List<Message> resultList = messageDAO.queryMessage(1, TEST_MILLISEC);
+		assertEquals(1, resultList.size());
+		assertEquals(UUID.fromString(TEST_UUID), resultList.get(0).get_uuid());
+		assertEquals(TEST_USERNAME, resultList.get(0).get_username());
+		assertEquals(TEST_CONTENT, resultList.get(0).get_content());
+		assertEquals(TEST_TIME, dateFormatter.format(resultList.get(0).get_time()));
+		// Test function calls' order
+		InOrder order = inOrder(connection, pstmt, rs);
+		try {
+			order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);
+			order.verify(pstmt).executeQuery();
+			order.verify(rs).next();
+			order.verify(rs, times(4)).getString(anyString());
+			order.verify(rs).next();
+			order.verify(pstmt).close();
+			order.verify(connection).close();
+			order.verifyNoMoreInteractions();
+		} catch (SQLException sqlE) {
+			System.out.println(sqlE.getMessage());
+			fail("Exception occurs when testing function calls' order");
+		}
+	}
 
   @Test
   void testQueryMessageWithSize2AndMillisec1572364800000() {

@@ -1,12 +1,11 @@
 package com.uncooleben.controller;
 
-import com.uncooleben.dao.MessageDBDAO;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.uncooleben.dao.MessageDAO;
-import com.uncooleben.dao.MessageMySQLDAO;
+import com.uncooleben.service.dao.MessageDAO;
 
 /**
  * This class is a part of Software-Testing lab02 timeline.
@@ -21,11 +20,8 @@ import com.uncooleben.dao.MessageMySQLDAO;
 @Controller
 public class UpdateController {
 
-	private MessageDAO messageDAO;
-
-	public UpdateController() {
-		this.messageDAO = (new MessageDBDAO()).getActualDAO();
-	}
+	@Autowired
+	MessageDAO messageDAO;
 
 	/**
 	 * This method query how many new messages are there in the database since the
