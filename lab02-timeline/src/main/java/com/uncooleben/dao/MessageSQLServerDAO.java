@@ -79,28 +79,31 @@ public class MessageSQLServerDAO implements MessageDAO {
     return false;
   }
 
+  protected File createFile(String path, String filename) throws IOException {
+    File dir = new File(path);
+    if (!dir.exists()) {
+      System.out.println("create dir");
+      dir.mkdir();
+    }
+    File actualFile = new File(dir, filename);
+    if (!actualFile.exists()) {
+      System.out.println("create file");
+      actualFile.createNewFile();
+    }
+    return actualFile;
+  }
+
   @Override
   public boolean storeMessage(Message message, MultipartFile image) {
     String INSERT =
         "INSERT INTO message(uuid, username, content, time,withImage,path) "
             + "VALUES(?,?,?,?,1,?)";
     String path = System.getenv("TEMP") + "\\timeline_imgs";
-    File dir=new File(path);
-    if(!dir.exists())
-    {
-      System.out.println("create dir");
-      dir.mkdir();
-    }
-    String filename=message.get_uuid().toString() + ".jpg";
-    File actualFile = new File(dir,filename);
+    String filename = message.get_uuid().toString() + ".jpg";
     Connection conn = null;
     PreparedStatement pstmt = null;
     try {
-      if(!actualFile.exists())
-      {
-        System.out.println("create file");
-        actualFile.createNewFile();
-      }
+      File actualFile = createFile(path, filename);
       image.transferTo(actualFile);
       conn = getConnection();
       pstmt = conn.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS);
@@ -108,15 +111,14 @@ public class MessageSQLServerDAO implements MessageDAO {
       pstmt.setString(2, message.get_username());
       pstmt.setString(3, message.get_content());
       pstmt.setString(4, format.format(message.get_time()));
-      path=path.replace("\\","/");
-      pstmt.setString(5,path);
+      pstmt.setString(5, path);
       pstmt.execute();
       return true;
     } catch (SQLException sqlE) {
       sqlE.printStackTrace(System.err);
     } catch (IOException ioE) {
-    	ioE.printStackTrace(System.err);
-    	System.out.println("Exception occurs during I/O.");
+      ioE.printStackTrace(System.err);
+      System.out.println("Exception occurs during I/O.");
     } finally {
       closeStatementAndConnection(pstmt, conn);
     }
@@ -136,12 +138,12 @@ public class MessageSQLServerDAO implements MessageDAO {
       ResultSet rs = pstmt.executeQuery();
       while (rs.next()) {
         Message temp_message =
-            new Message(UUID.fromString(rs.getString("uuid")),
+            new Message(
+                UUID.fromString(rs.getString("uuid")),
                 rs.getString("username"),
                 rs.getString("content"),
                 format.parse(rs.getString("time")));
-        if (rs.getBoolean("withImage"))
-        {
+        if (rs.getBoolean("withImage")) {
           temp_message.set_path(rs.getString("path"));
         }
         result_list.add(temp_message);
@@ -173,8 +175,7 @@ public class MessageSQLServerDAO implements MessageDAO {
                 rs.getString("content"),
                 format.parse(rs.getString("time")));
         temp_message.set_ago(millisec);
-        if(rs.getBoolean("withImage"))
-        {
+        if (rs.getBoolean("withImage")) {
           temp_message.set_path(rs.getString("path"));
         }
         result_list.add(temp_message);

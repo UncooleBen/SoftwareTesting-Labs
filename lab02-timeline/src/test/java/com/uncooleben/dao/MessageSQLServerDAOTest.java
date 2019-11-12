@@ -7,14 +7,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.uncooleben.model.Message;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.Date;
@@ -30,6 +34,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
+import org.springframework.web.multipart.MultipartFile;
 
 public class MessageSQLServerDAOTest {
   private MessageSQLServerDAO messageDAO;
@@ -37,6 +42,8 @@ public class MessageSQLServerDAOTest {
   private PreparedStatement pstmt = mock(PreparedStatement.class);
   private Message message = mock(Message.class);
   private ResultSet rs = mock(ResultSet.class);
+  private File actualFile = mock(File.class);
+  private MultipartFile image = mock(MultipartFile.class);
   private DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
   private final String TEST_USERNAME = "testUsername";
   private final String TEST_CONTENT = "testContent";
@@ -64,12 +71,12 @@ public class MessageSQLServerDAOTest {
   }
 
   @Test
-  void testStoreNullMessageThrowsException() {
+  void testStoreNullMessageWithoutImageThrowsException() {
     assertThrows(NullPointerException.class, () -> messageDAO.storeMessage(null));
   }
 
   @Test
-  void testStoreOneMessage() {
+  void testStoreOneMessageWithoutImage() {
     String INSERT = "INSERT INTO message(uuid, username, content, time) VALUES(?,?,?,?)";
     Date date = mock(Date.class);
     boolean succeed = false;
@@ -118,7 +125,7 @@ public class MessageSQLServerDAOTest {
   }
 
   @Test
-  void testStoreMessageThrowsSQLException() {
+  void testStoreMessageWithoutImageThrowsSQLException() {
     // Change error output stream to capture error output
     ByteArrayOutputStream errContent = new ByteArrayOutputStream();
     PrintStream originalErr = System.err;
@@ -133,6 +140,90 @@ public class MessageSQLServerDAOTest {
     // Test return value
     boolean succeed = true;
     succeed = messageDAO.storeMessage(message);
+    assertFalse(succeed);
+    // Test error output
+    assertTrue(errContent.toString().contains("java.sql.SQLException"));
+    // Change error output stream back to default
+    System.setErr(originalErr);
+  }
+
+  @Test
+  void testStoreNullMessageWithImageThrowsException() {
+    assertThrows(NullPointerException.class, () -> messageDAO.storeMessage(null, image));
+  }
+
+  @Test
+  void testStoreOneMessageWithImage() {
+    String INSERT =
+        "INSERT INTO message(uuid, username, content, time,withImage,path) VALUES(?,?,?,?,1,?)";
+    Date date = mock(Date.class);
+    boolean succeed = false;
+    messageDAO = spy(messageDAO);
+    // Stub
+    try {
+      when(connection.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);
+      when(message.get_uuid()).thenReturn(UUID.fromString(TEST_UUID));
+      when(message.get_username()).thenReturn(TEST_USERNAME);
+      when(message.get_content()).thenReturn(TEST_CONTENT);
+      when(message.get_time()).thenReturn(date);
+      doReturn(actualFile).when(messageDAO).createFile(anyString(), anyString());
+    } catch (SQLException | IOException e) {
+      System.out.println(e.getMessage());
+      fail("Exception occurs when stubbing.");
+    }
+    // Test return value
+    succeed = messageDAO.storeMessage(message, image);
+    assertTrue(succeed);
+    // Test function calls
+    try {
+      verify(connection).prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS);
+      verify(pstmt, times(5)).setString(anyInt(), anyString());
+      verify(pstmt).execute();
+      verify(pstmt).close();
+      verify(connection).close();
+    } catch (SQLException sqlE) {
+      System.out.println(sqlE.getMessage());
+      fail("Exception occurs when testing function calls.");
+    }
+    // Test function calls' order and capture arguments
+    InOrder order = inOrder(pstmt, connection, messageDAO);
+    ArgumentCaptor<String> argsCap = ArgumentCaptor.forClass(String.class);
+    try {
+      order.verify(messageDAO).createFile(anyString(), anyString());
+      order.verify(connection).prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS);
+      order.verify(pstmt, times(5)).setString(anyInt(), argsCap.capture());
+      order.verify(pstmt).execute();
+      order.verify(pstmt).close();
+      order.verify(connection).close();
+      order.verifyNoMoreInteractions();
+    } catch (SQLException | IOException e) {
+      System.out.println(e.getMessage());
+      fail("Exception occurs when testing function calls' order.");
+    }
+    // Test arguments' order and value
+    assertEquals(TEST_USERNAME, argsCap.getAllValues().get(1));
+    assertEquals(TEST_CONTENT, argsCap.getAllValues().get(2));
+  }
+
+  @Test
+  void testStoreMessageWithImageThrowsSQLException() {
+    // Change error output stream to capture error output
+    ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+    PrintStream originalErr = System.err;
+    System.setErr(new PrintStream(errContent));
+    messageDAO = spy(messageDAO);
+    // Stub
+    try {
+      when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);
+      when(message.get_uuid()).thenReturn(UUID.fromString(TEST_UUID));
+      when(messageDAO.createFile(anyString(), anyString())).thenReturn(actualFile);
+    } catch (SQLException | IOException e) {
+      System.out.println(e.getMessage());
+      fail("Exception occurs when stubbing.");
+    }
+    // Test return value
+    boolean succeed = true;
+    succeed = messageDAO.storeMessage(message, image);
     assertFalse(succeed);
     // Test error output
     assertTrue(errContent.toString().contains("java.sql.SQLException"));
@@ -273,11 +364,11 @@ public class MessageSQLServerDAOTest {
     try {
       when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);
       when(pstmt.executeQuery()).thenReturn(rs);
-      when(rs.next()).thenReturn(true, true,false); // rs has 2 items
-      when(rs.getString("uuid")).thenReturn(TEST_UUID,TEST_UUID2);
-      when(rs.getString("username")).thenReturn(TEST_USERNAME,TEST_USERNAME2);
-      when(rs.getString("content")).thenReturn(TEST_CONTENT,TEST_CONTENT2);
-      when(rs.getString("time")).thenReturn(TEST_TIME,TEST_TIME2);
+      when(rs.next()).thenReturn(true, true, false); // rs has 2 items
+      when(rs.getString("uuid")).thenReturn(TEST_UUID, TEST_UUID2);
+      when(rs.getString("username")).thenReturn(TEST_USERNAME, TEST_USERNAME2);
+      when(rs.getString("content")).thenReturn(TEST_CONTENT, TEST_CONTENT2);
+      when(rs.getString("time")).thenReturn(TEST_TIME, TEST_TIME2);
     } catch (SQLException sqlE) {
       System.out.println(sqlE.getMessage());
       fail("Exception occurs when stubbing");
@@ -309,6 +400,87 @@ public class MessageSQLServerDAOTest {
     } catch (SQLException sqlE) {
       System.out.println(sqlE.getMessage());
       fail("Exception occurs when testing function calls' order");
+    }
+  }
+
+  @Test
+  void testQueryUpdates() {
+    String SELECT = "SELECT COUNT(*) FROM message WHERE time > ?";
+    // Stub
+    try {
+      when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);
+      when(pstmt.executeQuery()).thenReturn(rs);
+      when(rs.next()).thenReturn(true);
+      when(rs.getInt(1)).thenReturn(3);
+    } catch (SQLException e) {
+      System.out.println(e.getMessage());
+      fail("Exception occurs when stubbing.");
+    }
+    // Test return value
+    int result = messageDAO.queryUpdates(TEST_MILLISEC);
+    assertEquals(3, result);
+    // Test function calls' order
+    InOrder order = inOrder(connection, pstmt, rs);
+    try {
+      order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);
+      order.verify(pstmt).executeQuery();
+      order.verify(rs).next();
+      order.verify(rs).getInt(1);
+      order.verify(pstmt).close();
+      order.verify(connection).close();
+      order.verifyNoMoreInteractions();
+    } catch (SQLException e) {
+      System.out.println(e.getMessage());
+      fail("Exception occurs when testing function calls' order.");
+    }
+  }
+
+  @Test
+  void testQueryUpdatesThrowsSQLException() {
+    // Change error output stream to capture error output
+    ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+    PrintStream originalErr = System.err;
+    System.setErr(new PrintStream(errContent));
+    // Stub
+    try {
+      when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);
+    } catch (SQLException e) {
+      System.out.println(e.getMessage());
+      fail("Exception occurs when stubbing.");
+    }
+    // Test return value
+    int result = messageDAO.queryUpdates(TEST_MILLISEC);
+    assertEquals(0, result);
+    // Test error output
+    assertTrue(errContent.toString().contains("java.sql.SQLException"));
+    // Change error output stream back to default
+    System.setErr(originalErr);
+  }
+
+  @Test
+  void testClearTable() {
+    String DELETE = "DELETE FROM message";
+    // Stub
+    try {
+      when(connection.prepareStatement(DELETE, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);
+    } catch (SQLException e) {
+      System.out.println(e.getMessage());
+      fail("Exception occurs when stubbing.");
+    }
+    // Test return value
+    boolean result = messageDAO.clearTable();
+    assertTrue(result);
+    // Test function calls' order
+    InOrder order = inOrder(connection, pstmt);
+    try {
+      order.verify(connection).prepareStatement(DELETE, Statement.RETURN_GENERATED_KEYS);
+      order.verify(pstmt).execute();
+      order.verify(pstmt).close();
+      order.verify(connection).close();
+      order.verifyNoMoreInteractions();
+    } catch (SQLException e) {
+      System.out.println(e.getMessage());
+      fail("Exception occurs when testing function calls' order.");
     }
   }
 }
