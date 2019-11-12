@@ -6,8 +6,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
-import com.uncooleben.dao.MessageDAO;
-import com.uncooleben.dao.MessageDBDAO;
+import com.uncooleben.service.dao.MessageDAO;
+import com.uncooleben.service.dao.MessageDBDAO;
+import com.uncooleben.service.file.FAO;
+import com.uncooleben.service.file.FAOImpl;
 
 /**
  * This class is a part of Software-Testing lab02 timeline.
@@ -20,7 +22,7 @@ import com.uncooleben.dao.MessageDBDAO;
  */
 @Configuration
 @ComponentScan({ "com.uncooleben" })
-public class DispatcherConfig {
+public class ResourceConfig {
 
 	@Bean
 	public InternalResourceViewResolver viewResolver() {
@@ -38,6 +40,11 @@ public class DispatcherConfig {
 	@Bean(name = "messageDAO")
 	public MessageDAO getMessageDAO() {
 		return (new MessageDBDAO().getActualDAO());
+	}
+
+	@Bean(name = "fao")
+	public FAO getFAO() {
+		return new FAOImpl();
 	}
 
 }

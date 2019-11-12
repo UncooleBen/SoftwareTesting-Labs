@@ -1,16 +1,13 @@
-package com.uncooleben.dao;
+package com.uncooleben.service.dao;
 
 import java.util.List;
 import java.util.UUID;
 
 import com.uncooleben.model.Message;
-import org.springframework.web.multipart.MultipartFile;
 
 public interface MessageDAO {
 
-	boolean storeMessage(Message message);
-
-	boolean storeMessage(Message message, MultipartFile image);
+	boolean storeMessage(Message message, boolean withImage);
 
 	List<Message> queryMessageByUUID(UUID uuid);
 

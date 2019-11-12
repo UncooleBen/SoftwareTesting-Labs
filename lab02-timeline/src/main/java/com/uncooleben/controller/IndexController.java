@@ -5,7 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.uncooleben.dao.MessageDAO;
+import com.uncooleben.service.dao.MessageDAO;
 
 /**
  * This class is a part of Software-Testing lab02 timeline.

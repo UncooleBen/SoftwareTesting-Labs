@@ -5,30 +5,21 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 
-import com.uncooleben.dao.MessageDAO;
-import com.uncooleben.dao.MessageDBDAO;
+import com.uncooleben.service.dao.MessageDAO;
 
 class UpdateControllerTest {
 
-	@Mock
-	private MessageDAO messagedao;
-
-	@InjectMocks
-	private UpdateController updatecontroller = new UpdateController();
+	private MessageDAO messageDAO = mock(MessageDAO.class);
+	private UpdateController updateController = new UpdateController();
 
 	@Test
 	void test_update() {
-		MessageDBDAO messageDBDAO = mock(MessageDBDAO.class);
-		MessageDAO messageDAO = mock(MessageDAO.class);
+		updateController.messageDAO = messageDAO;
 		when(messageDAO.queryUpdates(1)).thenReturn(2);
 
-		UpdateController updatecontroller = new UpdateController();
-
 		String result = 2 + " Update(s)";
-		assertEquals(updatecontroller.update("1"), result);
+		assertEquals(updateController.update("1"), result);
 	}
 
 }

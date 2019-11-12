@@ -41,6 +41,7 @@ import org.mockito.Mockito;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.uncooleben.model.Message;
+import com.uncooleben.service.dao.MessageMySQLDAO;
 
 public class MessageMySQLDAOTest {
 

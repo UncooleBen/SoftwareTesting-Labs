@@ -1,35 +1,34 @@
 package com.uncooleben.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import com.uncooleben.dao.MessageDAO;
-import com.uncooleben.dao.MessageDBDAO;
 import com.uncooleben.model.Message;
+import com.uncooleben.service.dao.MessageDAO;
 
 class MoreControllerTest {
 
+	private MessageDAO messageDAO = mock(MessageDAO.class);
+	private MoreController moreController = new MoreController();
+
 	@Test
 	void test_more() {
-		MessageDBDAO messageDBDAO=mock(MessageDBDAO.class);
-		MessageDAO messageDAO=mock(MessageDAO.class);
-		PowerMockito.whenNew(MessageDBDAO.class).withArguments().thenReturn(messageDBDAO);
-		
-		
-		List<Message> messages=new ArrayList<Message>();
-		messages.add(new Message("彭钧涛", "彭哥牛逼", new Date(1000)));
-		when(messageDAO.queryMessage(4,2)).thenReturn(messages);
-		
-		MoreController morecontroller=new MoreController();
-		
-		String result="";
-		assertEquals(morecontroller.more("1","2"),result);
+		moreController.messageDAO = messageDAO;
+		List<Message> messages = new ArrayList<Message>();
+		messages.add(
+				new Message(UUID.fromString("0c312388-5d09-4f44-b670-5461605f0b1e"), "彭钧涛", "彭哥牛逼", new Date(1000)));
+		when(messageDAO.queryMessage(4, 2)).thenReturn(messages);
+
+		String result = "[{\"_username\":\"彭钧涛\",\"_content\":\"彭哥牛逼\",\"_time\":\"Jan 1, 1970, 8:00:01 AM\",\"_uuid\":\"0c312388-5d09-4f44-b670-5461605f0b1e\",\"_uuidstr\":\"0c312388-5d09-4f44-b670-5461605f0b1e\"}]";
+		assertEquals(moreController.more("1", "2"), result);
 	}
 
 }

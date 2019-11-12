@@ -1,4 +1,4 @@
-package com.uncooleben.dao;
+package com.uncooleben.service.dao;
 
 public class MessageDBDAO {
 	private static String platform = "0"; // 0 stands for MySQL, 1 stands for SQLServer

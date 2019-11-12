@@ -3,7 +3,6 @@ package com.uncooleben.controller;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -15,12 +14,11 @@ class ImageControllerTest {
 	@Test
 	void test_testphoto() throws IOException {
 		HttpServletRequest request = mock(HttpServletRequest.class);
-		when(request.getRequestURL()).thenReturn(new StringBuffer("dsasda"));
+		StringBuffer urlbuffer = new StringBuffer("http://localhost:8080/jqueryLearn/resources/request.jsp");
+		when(request.getRequestURL()).thenReturn(urlbuffer);
 
-		ImageController imagecontroller = new ImageController();
-		byte[] result = imagecontroller.testphoto(request);
-		FileInputStream fis = mock(FileInputStream.class);
-
+		ImageController imageController = new ImageController();
+		imageController.testphoto(request);
 	}
 
 }
