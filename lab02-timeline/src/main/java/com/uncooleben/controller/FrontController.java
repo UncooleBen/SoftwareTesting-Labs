@@ -1,11 +1,10 @@
 package com.uncooleben.controller;
 
-import java.io.File;
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletRegistration;
-import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 import com.uncooleben.config.MVCConfig;
+import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 /**
  * This class is a part of Software-Testing lab02 timeline.
