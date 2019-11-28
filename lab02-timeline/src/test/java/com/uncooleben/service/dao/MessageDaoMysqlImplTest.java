@@ -29,7 +29,7 @@ import com.uncooleben.model.Message;
 import org.mockito.InOrder;
 
 
-/*
+/**
  * This class is the unit test of class MessageDaoMysqlImpl.
  *
  * @author Juntao Peng
