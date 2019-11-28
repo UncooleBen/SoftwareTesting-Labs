@@ -11,7 +11,7 @@ import java.io.PrintStream;
 import java.util.Date;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -19,12 +19,26 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.uncooleben.model.Message;
 
-class FAOImplTest {
 
+/**
+ * This class is for unit testing FAOImpl class.
+ *
+ * @author Juntao Peng
+ *
+ * @date 2019.11.28
+ **/
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+class FAOImplTest {
 	private File mockedDir = mock(File.class);
 	private File mockedFile = mock(File.class);
-	private TestableFAOImpl fao = new TestableFAOImpl();
-	private long milliTime = System.currentTimeMillis();
+	private TestableFAOImpl fao;
+	private long milliTime;
+	private ByteArrayOutputStream outContent;
+	private ByteArrayOutputStream errContent;
+	private IOException test_io_exception;
+	private MultipartFile image;
+	private PrintStream originalOut;
+	private PrintStream originalErr;
 
 	class TestableFAOImpl extends FAOImpl {
 
@@ -39,32 +53,41 @@ class FAOImplTest {
 		}
 	}
 
-	@Test
-	public void test_io_exception_store_image() {
-		Date date = new Date(milliTime);
-		Message message = new Message("james", "im bond", date);
-		IOException test_ioe = new IOException();
-		MultipartFile image = mock(MultipartFile.class);
-		// Mocking behaviours
-		when(mockedDir.exists()).thenReturn(true);
-		when(mockedFile.exists()).thenReturn(false);
-		try {
-			when(mockedFile.createNewFile()).thenThrow(test_ioe);
-		} catch (IOException ioe) {
-			// Won't throw any exception in this try/catch block
-			ioe.printStackTrace(System.err);
-		}
-		// Run the method
-		ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-		ByteArrayOutputStream errContent = new ByteArrayOutputStream();
-		PrintStream originalOut = System.out;
-		PrintStream originalErr = System.err;
+	@BeforeEach
+	void init() {
+		this.fao = new TestableFAOImpl();
+		this.milliTime = System.currentTimeMillis();
+		this.outContent = new ByteArrayOutputStream();
+		this.errContent = new ByteArrayOutputStream();
+		this.test_io_exception = new IOException();
+		this.image = mock(MultipartFile.class);
+		this.originalOut = System.out;
+		this.originalErr = System.err;
 		System.setOut(new PrintStream(outContent));
 		System.setErr(new PrintStream(errContent));
-		this.fao.storeImage(message, image);
-		assertTrue(errContent.toString().contains("java.io.IOException"));
+	}
+
+	@AfterEach
+	void tear_down() throws IOException {
+		this.outContent.close();
+		this.errContent.close();
 		System.setOut(originalOut);
 		System.setErr(originalErr);
+	}
+
+	@Order(1)
+	@Test
+	public void test_io_exception_store_image() throws IOException {
+		Date date = new Date(milliTime);
+		Message message = new Message("james", "im bond", date);
+		/* Mocking behaviours */
+		when(mockedDir.exists()).thenReturn(true);
+		when(mockedFile.exists()).thenReturn(false);
+		when(mockedFile.createNewFile()).thenThrow(test_io_exception);
+		/* Run the method */
+		this.fao.storeImage(message, image);
+		/* Assertions */
+		assertTrue(errContent.toString().contains("java.io.IOException"));
 	}
 
 	static Stream<Arguments> booleanAndBooleanProvider() {
@@ -72,16 +95,18 @@ class FAOImplTest {
 				Arguments.of(false, false));
 	}
 
+	@Order(2)
 	@ParameterizedTest
 	@MethodSource("booleanAndBooleanProvider")
 	public void test_store_image(boolean value1, boolean value2) {
 		Date date = new Date(milliTime);
 		Message message = new Message("james", "im bond", date);
-		MultipartFile image = mock(MultipartFile.class);
-		// Mocking behaviours
+		/* Mocking behaviours */
 		when(mockedDir.exists()).thenReturn(value1);
 		when(mockedFile.exists()).thenReturn(value2);
+		/* Run the method */
 		boolean result = this.fao.storeImage(message, image);
+		/* Assertions */
 		assertTrue(result);
 	}
 

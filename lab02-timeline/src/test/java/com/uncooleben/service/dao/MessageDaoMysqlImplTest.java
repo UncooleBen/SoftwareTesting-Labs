@@ -5,11 +5,7 @@ import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -30,6 +26,7 @@ import org.junit.jupiter.api.*;
 import org.mockito.ArgumentCaptor;
 
 import com.uncooleben.model.Message;
+import org.mockito.InOrder;
 
 
 /*
@@ -42,7 +39,7 @@ import com.uncooleben.model.Message;
 class MessageDaoMysqlImplTest {
 
     private Connection connection = mock(Connection.class);
-    private PreparedStatement pstmt = mock(PreparedStatement.class);
+    private PreparedStatement preparedStatement = mock(PreparedStatement.class);
 	private ResultSet rs = mock(ResultSet.class);
     private MessageDaoMysqlImpl messageDAO;
     private long milliTime;
@@ -108,13 +105,15 @@ class MessageDaoMysqlImplTest {
         Date date = new Date(milliTime);
         Message message = new Message("james", "im bond", date);
         /* Mocking behaviours */
-		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);
+		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(preparedStatement);
         /* Run the method */
         boolean succeeded = this.messageDAO.storeMessage(message, false);
         /* Assertions */
         assertTrue(succeeded);
-        verify(pstmt, times(5)).setString(anyInt(), stringArgumentCaptor.capture());
-        verify(pstmt, times(1)).setBoolean(anyInt(), booleanArgumentCaptor.capture());
+        InOrder order = inOrder(preparedStatement);
+        order.verify(preparedStatement, times(4)).setString(anyInt(), stringArgumentCaptor.capture());
+        order.verify(preparedStatement, times(1)).setBoolean(anyInt(), booleanArgumentCaptor.capture());
+        order.verify(preparedStatement, times(1)).setString(anyInt(), stringArgumentCaptor.capture());
         assertAll(
 				() -> assertEquals("james", stringArgumentCaptor.getAllValues().get(1)),
 				() -> assertEquals("im bond", stringArgumentCaptor.getAllValues().get(2)),
@@ -129,13 +128,15 @@ class MessageDaoMysqlImplTest {
         Date date = new Date(milliTime);
         Message message = new Message("james", "im bond", date);
         /* Mocking behaviours */
-		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);
+		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(preparedStatement);
         /* Run the method */
         boolean succeeded = this.messageDAO.storeMessage(message, true);
         /* Assertions */
-		verify(pstmt, times(5)).setString(anyInt(), stringArgumentCaptor.capture());
-		verify(pstmt, times(1)).setBoolean(anyInt(), booleanArgumentCaptor.capture());
-		assertAll(
+		InOrder order = inOrder(preparedStatement);
+		order.verify(preparedStatement, times(4)).setString(anyInt(), stringArgumentCaptor.capture());
+		order.verify(preparedStatement, times(1)).setBoolean(anyInt(), booleanArgumentCaptor.capture());
+        order.verify(preparedStatement, times(1)).setString(anyInt(), stringArgumentCaptor.capture());
+        assertAll(
 				() -> assertTrue(succeeded),
 				() -> assertEquals("james", stringArgumentCaptor.getAllValues().get(1)),
 				() -> assertEquals("im bond", stringArgumentCaptor.getAllValues().get(2)),
@@ -165,8 +166,8 @@ class MessageDaoMysqlImplTest {
         String content = "hello";
         String time = "MALFORMED DATE STRING";
         /* Mocking behaviors */
-		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);
-		when(pstmt.executeQuery()).thenReturn(rs);
+		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(preparedStatement);
+		when(preparedStatement.executeQuery()).thenReturn(rs);
 		when(rs.next()).thenReturn(true, false); // First call returns true, second call returns false
 		when(rs.getString("uuid")).thenReturn(uuid_str);
 		when(rs.getString("username")).thenReturn(username);
@@ -187,8 +188,8 @@ class MessageDaoMysqlImplTest {
         String content = "hello";
         String time = this.format.format(new Date(this.milliTime));
         /* Mocking behaviors */
-		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);
-		when(pstmt.executeQuery()).thenReturn(rs);
+		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(preparedStatement);
+		when(preparedStatement.executeQuery()).thenReturn(rs);
 		when(rs.next()).thenReturn(true, false); /* First call returns true, second call returns false */
 		when(rs.getString("uuid")).thenReturn(uuid_str);
 		when(rs.getString("username")).thenReturn(username);
@@ -197,7 +198,8 @@ class MessageDaoMysqlImplTest {
         /* Run the method */
 		List<Message> result_list = this.messageDAO.queryMessageByUUID(uuid);
         /* Assertions */
-		verify(pstmt, times(1)).setString(anyInt(), stringArgumentCaptor.capture());
+		InOrder order = inOrder(preparedStatement);
+		order.verify(preparedStatement, times(1)).setString(anyInt(), stringArgumentCaptor.capture());
         Message result_message = result_list.get(0);
         assertAll(
 				() -> assertEquals(1, result_list.size()),
@@ -229,8 +231,8 @@ class MessageDaoMysqlImplTest {
         String content = "hello";
         String time = "MALFORMED DATE STRING";
         /* Mocking behaviors */
-		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);
-		when(pstmt.executeQuery()).thenReturn(rs);
+		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(preparedStatement);
+		when(preparedStatement.executeQuery()).thenReturn(rs);
 		when(rs.next()).thenReturn(true, false); // First call returns true, second call returns false
 		when(rs.getString("uuid")).thenReturn(uuid_str);
 		when(rs.getString("username")).thenReturn(username);
@@ -261,8 +263,8 @@ class MessageDaoMysqlImplTest {
         Supplier<Stream<String>> times = () -> expected.stream().map(Message::get_time)
                 .map(date -> (this.format.format(date)));
 		/* Mocking behaviors */
-		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);
-		when(pstmt.executeQuery()).thenReturn(rs);
+		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(preparedStatement);
+		when(preparedStatement.executeQuery()).thenReturn(rs);
 		when(rs.next()).thenReturn(true, true, true, true, true, false); /* First call returns
 		 true, sequential calls return true, true, true, true, false. */
 		when(rs.getString("uuid")).thenReturn(uuids.get().findFirst().get(),
@@ -276,8 +278,9 @@ class MessageDaoMysqlImplTest {
         /* Run the method */
         List<Message> actual = this.messageDAO.queryMessage(5, milliTime);
         /* Assertions */
-		verify(pstmt, times(1)).setString(eq(1), stringArgumentCaptor.capture());
-		verify(pstmt, times(1)).setInt(eq(2), integerArgumentCaptor.capture());
+		InOrder order = inOrder(preparedStatement);
+		order.verify(preparedStatement, times(1)).setString(eq(1), stringArgumentCaptor.capture());
+		order.verify(preparedStatement, times(1)).setInt(eq(2), integerArgumentCaptor.capture());
 		assertAll(
 					() -> assertEquals(5, actual.size()),
 					() -> assertEquals(expected.get(0), actual.get(0)),
@@ -306,14 +309,15 @@ class MessageDaoMysqlImplTest {
     void test_query_updates() throws SQLException {
         int expected = 5;
         /* Mocking behaviors */
-		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);
-		when(pstmt.executeQuery()).thenReturn(rs);
+		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(preparedStatement);
+		when(preparedStatement.executeQuery()).thenReturn(rs);
 		when(rs.next()).thenReturn(true, false);
 		when(rs.getInt(1)).thenReturn(expected);
 		/* Run the method */
         int actual = this.messageDAO.queryUpdates(milliTime);
         /* Assertions */
-		verify(pstmt, times(1)).setString(eq(1), stringArgumentCaptor.capture());
+		InOrder order = inOrder(preparedStatement);
+		order.verify(preparedStatement, times(1)).setString(eq(1), stringArgumentCaptor.capture());
         assertAll(
 					() -> assertEquals(expected, actual),
 					() -> assertEquals(this.format.format(new Date(milliTime)), stringArgumentCaptor.getAllValues().get(0))
@@ -335,7 +339,7 @@ class MessageDaoMysqlImplTest {
     @Test
     void test_clear_table() throws SQLException {
 		/* Mocking behaviors */
-        when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);
+        when(connection.prepareStatement(anyString(), anyInt())).thenReturn(preparedStatement);
 		/* Run the method */
         boolean success = this.messageDAO.clearTable();
 		/* Assertions */
@@ -346,9 +350,9 @@ class MessageDaoMysqlImplTest {
     @Test
     void test_sql_exception_close_statement() throws SQLException {
 		/* Mocking behaviors */
-        doThrow(test_sql_exception).when(pstmt).close();
+        doThrow(test_sql_exception).when(preparedStatement).close();
 		/* Run the method */
-        this.messageDAO.closeStatementAndConnection(pstmt, connection);
+        this.messageDAO.closeStatementAndConnection(preparedStatement, connection);
 		/* Assertions */
         assertTrue(errContent.toString().contains("java.sql.SQLException"));
     }
@@ -359,7 +363,7 @@ class MessageDaoMysqlImplTest {
 		/* Mocking behaviors */
         doThrow(test_sql_exception).when(connection).close();
 		/* Run the method */
-        this.messageDAO.closeStatementAndConnection(pstmt, connection);
+        this.messageDAO.closeStatementAndConnection(preparedStatement, connection);
 		/* Assertions */
         assertTrue(errContent.toString().contains("java.sql.SQLException"));
     }
