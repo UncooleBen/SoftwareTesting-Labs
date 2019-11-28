@@ -36,434 +36,438 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 
-<span class="fc" id="L39">public class MessageSQLServerDAOTest {</span>
+/**
+ * This class is a unit test of class MessageSQLServerDAO.
+ *
+ * @author Shangzhen Li
+ */
+<span class="fc" id="L44">public class MessageSQLServerDAOTest {</span>
   private MessageSQLServerDAO messageDAO;
-<span class="fc" id="L41">  private Connection connection = mock(Connection.class);</span>
-<span class="fc" id="L42">  private PreparedStatement pstmt = mock(PreparedStatement.class);</span>
-<span class="fc" id="L43">  private Message message = mock(Message.class);</span>
-<span class="fc" id="L44">  private ResultSet rs = mock(ResultSet.class);</span>
+<span class="fc" id="L46">  private Connection connection = mock(Connection.class);</span>
+<span class="fc" id="L47">  private PreparedStatement pstmt = mock(PreparedStatement.class);</span>
+<span class="fc" id="L48">  private Message message = mock(Message.class);</span>
+<span class="fc" id="L49">  private ResultSet rs = mock(ResultSet.class);</span>
   private Locale defaultLocale;
-  ByteArrayOutputStream errContent;
-  PrintStream originalErr;
-<span class="fc" id="L48">  private DateFormat dateFormatter = new SimpleDateFormat(&quot;yyyy-MM-dd hh:mm:ss&quot;);</span>
-<span class="fc" id="L49">  private final String TEST_USERNAME = &quot;testUsername&quot;;</span>
-<span class="fc" id="L50">  private final String TEST_CONTENT = &quot;testContent&quot;;</span>
-<span class="fc" id="L51">  private final String TEST_UUID = &quot;0-0-0-0-0&quot;;</span>
-<span class="fc" id="L52">  private final String TEST_TIME = &quot;2019-10-30 12:00:00&quot;;</span>
-<span class="fc" id="L53">  private final String TEST_PATH = &quot;testPath&quot;;</span>
-<span class="fc" id="L54">  private final long TEST_MILLISEC = 1572364800000L; // Equal to TEST_TIME</span>
-<span class="fc" id="L55">  private final String TEST_USERNAME2 = &quot;testUsername2&quot;;</span>
-<span class="fc" id="L56">  private final String TEST_CONTENT2 = &quot;testContent2&quot;;</span>
-<span class="fc" id="L57">  private final String TEST_UUID2 = &quot;0-0-0-0-1&quot;;</span>
-<span class="fc" id="L58">  private final String TEST_TIME2 = &quot;2019-10-30 08:00:00&quot;;</span>
+  private ByteArrayOutputStream errContent;
+  private PrintStream originalErr;
+<span class="fc" id="L53">  private DateFormat dateFormatter = new SimpleDateFormat(&quot;yyyy-MM-dd hh:mm:ss&quot;);</span>
+<span class="fc" id="L54">  private final String TEST_USERNAME = &quot;testUsername&quot;;</span>
+<span class="fc" id="L55">  private final String TEST_CONTENT = &quot;testContent&quot;;</span>
+<span class="fc" id="L56">  private final String TEST_UUID = &quot;0-0-0-0-0&quot;;</span>
+<span class="fc" id="L57">  private final String TEST_TIME = &quot;2019-10-30 12:00:00&quot;;</span>
+<span class="fc" id="L58">  private final String TEST_PATH = &quot;testPath&quot;;</span>
+<span class="fc" id="L59">  private final long TEST_MILLISEC = 1572364800000L; /* Equal to TEST_TIME */</span>
+<span class="fc" id="L60">  private final String TEST_USERNAME2 = &quot;testUsername2&quot;;</span>
+<span class="fc" id="L61">  private final String TEST_CONTENT2 = &quot;testContent2&quot;;</span>
+<span class="fc" id="L62">  private final String TEST_UUID2 = &quot;0-0-0-0-1&quot;;</span>
+<span class="fc" id="L63">  private final String TEST_TIME2 = &quot;2019-10-30 08:00:00&quot;;</span>
 
-<span class="fc" id="L60">  class MessageSQLServerDAOFake extends MessageSQLServerDAO {</span>
+<span class="fc" id="L65">  class MessageSQLServerDAOFake extends MessageSQLServerDAO {</span>
     @Override
-<span class="nc" id="L62">    protected void loadDriver() {}</span>
+<span class="nc" id="L67">    protected void loadDriver() {}</span>
 
     @Override
     protected Connection getConnection() {
-<span class="fc" id="L66">      return connection;</span>
+<span class="fc" id="L71">      return connection;</span>
     }
   }
 
   @BeforeEach
   void init() {
-<span class="fc" id="L72">    messageDAO = new MessageSQLServerDAOFake();</span>
-<span class="fc" id="L73">    defaultLocale = Locale.getDefault();</span>
-<span class="fc" id="L74">    Locale.setDefault(Locale.CHINA);</span>
-    // Change error output stream to capture error output
-<span class="fc" id="L76">    errContent = new ByteArrayOutputStream();</span>
-<span class="fc" id="L77">    originalErr = System.err;</span>
-<span class="fc" id="L78">    System.setErr(new PrintStream(errContent));</span>
-<span class="fc" id="L79">  }</span>
+<span class="fc" id="L77">    messageDAO = new MessageSQLServerDAOFake();</span>
+<span class="fc" id="L78">    defaultLocale = Locale.getDefault();</span>
+<span class="fc" id="L79">    Locale.setDefault(Locale.CHINA);</span>
+    /* Change error output stream to capture error output */
+<span class="fc" id="L81">    errContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L82">    originalErr = System.err;</span>
+<span class="fc" id="L83">    System.setErr(new PrintStream(errContent));</span>
+<span class="fc" id="L84">  }</span>
 
   @AfterEach
   void restore() {
-<span class="fc" id="L83">    Locale.setDefault(defaultLocale);</span>
-    // Change error output stream back to default
-<span class="fc" id="L85">    System.setErr(originalErr);</span>
-<span class="fc" id="L86">  }</span>
-
-  @Test
-  void testStoreNullMessageWithoutImageThrowsException() {
-<span class="pc" id="L90">    assertThrows(NullPointerException.class, () -&gt; messageDAO.storeMessage(null, true));</span>
+<span class="fc" id="L88">    Locale.setDefault(defaultLocale);</span>
+    /* Change error output stream back to default */
+<span class="fc" id="L90">    System.setErr(originalErr);</span>
 <span class="fc" id="L91">  }</span>
 
   @Test
+  void testStoreNullMessageWithoutImageThrowsException() {
+<span class="pc" id="L95">    assertThrows(NullPointerException.class, () -&gt; messageDAO.storeMessage(null, true));</span>
+<span class="fc" id="L96">  }</span>
+
+  @Test
   void testStoreOneMessageWithoutImage() throws Exception {
-<span class="fc" id="L95">    String INSERT =</span>
+<span class="fc" id="L100">    String INSERT =</span>
         &quot;INSERT INTO message(uuid, username, content, time, withImage, path) VALUES(?,?,?,?,?,?)&quot;;
-<span class="fc" id="L97">    Date date = mock(Date.class);</span>
-    // Stub
-<span class="fc" id="L99">    when(connection.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);</span>
-<span class="fc" id="L100">    when(message.get_uuid()).thenReturn(UUID.fromString(TEST_UUID));</span>
-<span class="fc" id="L101">    when(message.get_username()).thenReturn(TEST_USERNAME);</span>
-<span class="fc" id="L102">    when(message.get_content()).thenReturn(TEST_CONTENT);</span>
-<span class="fc" id="L103">    when(message.get_time()).thenReturn(date);</span>
-    // Test return value
-<span class="fc" id="L105">    boolean succeed = messageDAO.storeMessage(message, false);</span>
-<span class="fc" id="L106">    assertTrue(succeed);</span>
-    // Test function calls' order and capture arguments
-<span class="fc" id="L108">    InOrder order = inOrder(pstmt, connection);</span>
-<span class="fc" id="L109">    ArgumentCaptor&lt;String&gt; argsCap = ArgumentCaptor.forClass(String.class);</span>
-<span class="fc" id="L110">    order.verify(connection).prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS);</span>
-<span class="fc" id="L111">    order.verify(pstmt, times(4)).setString(anyInt(), argsCap.capture());</span>
-<span class="fc" id="L112">    order.verify(pstmt).setBoolean(5, false);</span>
-<span class="fc" id="L113">    order.verify(pstmt).setString(6, null);</span>
-<span class="fc" id="L114">    order.verify(pstmt).execute();</span>
-<span class="fc" id="L115">    order.verify(pstmt).close();</span>
-<span class="fc" id="L116">    order.verify(connection).close();</span>
-<span class="fc" id="L117">    order.verifyNoMoreInteractions();</span>
-    // Test arguments' order and value
-<span class="fc" id="L119">    assertEquals(TEST_USERNAME, argsCap.getAllValues().get(1));</span>
-<span class="fc" id="L120">    assertEquals(TEST_CONTENT, argsCap.getAllValues().get(2));</span>
-<span class="fc" id="L121">  }</span>
+<span class="fc" id="L102">    Date date = mock(Date.class);</span>
+    /* Stub */
+<span class="fc" id="L104">    when(connection.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);</span>
+<span class="fc" id="L105">    when(message.get_uuid()).thenReturn(UUID.fromString(TEST_UUID));</span>
+<span class="fc" id="L106">    when(message.get_username()).thenReturn(TEST_USERNAME);</span>
+<span class="fc" id="L107">    when(message.get_content()).thenReturn(TEST_CONTENT);</span>
+<span class="fc" id="L108">    when(message.get_time()).thenReturn(date);</span>
+    /* Test return value */
+<span class="fc" id="L110">    boolean succeed = messageDAO.storeMessage(message, false);</span>
+<span class="fc" id="L111">    assertTrue(succeed);</span>
+    /* Test function calls' order and capture arguments */
+<span class="fc" id="L113">    InOrder order = inOrder(pstmt, connection);</span>
+<span class="fc" id="L114">    ArgumentCaptor&lt;String&gt; argsCap = ArgumentCaptor.forClass(String.class);</span>
+<span class="fc" id="L115">    order.verify(connection).prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS);</span>
+<span class="fc" id="L116">    order.verify(pstmt, times(4)).setString(anyInt(), argsCap.capture());</span>
+<span class="fc" id="L117">    order.verify(pstmt).setBoolean(5, false);</span>
+<span class="fc" id="L118">    order.verify(pstmt).setString(6, null);</span>
+<span class="fc" id="L119">    order.verify(pstmt).execute();</span>
+<span class="fc" id="L120">    order.verify(pstmt).close();</span>
+<span class="fc" id="L121">    order.verify(connection).close();</span>
+<span class="fc" id="L122">    order.verifyNoMoreInteractions();</span>
+    /* Test arguments' order and value */
+<span class="fc" id="L124">    assertEquals(TEST_USERNAME, argsCap.getAllValues().get(1));</span>
+<span class="fc" id="L125">    assertEquals(TEST_CONTENT, argsCap.getAllValues().get(2));</span>
+<span class="fc" id="L126">  }</span>
 
   @Test
   void testStoreMessageWithoutImageThrowsSQLException() throws Exception {
-    // Stub
-<span class="fc" id="L126">    when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);</span>
-    // Test return value
-<span class="fc" id="L128">    boolean succeed = true;</span>
-<span class="fc" id="L129">    succeed = messageDAO.storeMessage(message, false);</span>
-<span class="fc" id="L130">    assertFalse(succeed);</span>
-    // Test error output
-<span class="fc" id="L132">    assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
-<span class="fc" id="L133">  }</span>
+    /* Stub */
+<span class="fc" id="L131">    when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);</span>
+    /* Test return value */
+<span class="fc" id="L133">    boolean succeed = messageDAO.storeMessage(message, false);</span>
+<span class="fc" id="L134">    assertFalse(succeed);</span>
+    /* Test error output */
+<span class="fc" id="L136">    assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L137">  }</span>
 
   @Test
   void testStoreNullMessageWithImageThrowsException() {
-<span class="pc" id="L137">    assertThrows(NullPointerException.class, () -&gt; messageDAO.storeMessage(null, true));</span>
-<span class="fc" id="L138">  }</span>
+<span class="pc" id="L141">    assertThrows(NullPointerException.class, () -&gt; messageDAO.storeMessage(null, true));</span>
+<span class="fc" id="L142">  }</span>
 
   @Test
   void testStoreOneMessageWithImage() throws Exception {
-<span class="fc" id="L142">    String INSERT =</span>
+<span class="fc" id="L146">    String INSERT =</span>
         &quot;INSERT INTO message(uuid, username, content, time, withImage, path) VALUES(?,?,?,?,?,?)&quot;;
-<span class="fc" id="L144">    Date date = mock(Date.class);</span>
-<span class="fc" id="L145">    messageDAO = spy(messageDAO);</span>
-    // Stub
-<span class="fc" id="L147">    when(connection.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);</span>
-<span class="fc" id="L148">    when(message.get_uuid()).thenReturn(UUID.fromString(TEST_UUID));</span>
-<span class="fc" id="L149">    when(message.get_username()).thenReturn(TEST_USERNAME);</span>
-<span class="fc" id="L150">    when(message.get_content()).thenReturn(TEST_CONTENT);</span>
-<span class="fc" id="L151">    when(message.get_time()).thenReturn(date);</span>
-    // Test return value
-<span class="fc" id="L153">    boolean succeed = messageDAO.storeMessage(message, true);</span>
-<span class="fc" id="L154">    assertTrue(succeed);</span>
-    // Test function calls' order and capture arguments
-<span class="fc" id="L156">    InOrder order = inOrder(pstmt, connection, messageDAO);</span>
-<span class="fc" id="L157">    ArgumentCaptor&lt;String&gt; argsCap = ArgumentCaptor.forClass(String.class);</span>
-<span class="fc" id="L158">    order.verify(connection).prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS);</span>
-<span class="fc" id="L159">    order.verify(pstmt, times(4)).setString(anyInt(), argsCap.capture());</span>
-<span class="fc" id="L160">    order.verify(pstmt).setBoolean(5, true);</span>
-<span class="fc" id="L161">    order.verify(pstmt).setString(eq(6), anyString());</span>
-<span class="fc" id="L162">    order.verify(pstmt).execute();</span>
-<span class="fc" id="L163">    order.verify(pstmt).close();</span>
-<span class="fc" id="L164">    order.verify(connection).close();</span>
-<span class="fc" id="L165">    order.verifyNoMoreInteractions();</span>
-    // Test arguments' order and value
-<span class="fc" id="L167">    assertEquals(TEST_USERNAME, argsCap.getAllValues().get(1));</span>
-<span class="fc" id="L168">    assertEquals(TEST_CONTENT, argsCap.getAllValues().get(2));</span>
-<span class="fc" id="L169">  }</span>
+<span class="fc" id="L148">    Date date = mock(Date.class);</span>
+<span class="fc" id="L149">    messageDAO = spy(messageDAO);</span>
+    /* Stub */
+<span class="fc" id="L151">    when(connection.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);</span>
+<span class="fc" id="L152">    when(message.get_uuid()).thenReturn(UUID.fromString(TEST_UUID));</span>
+<span class="fc" id="L153">    when(message.get_username()).thenReturn(TEST_USERNAME);</span>
+<span class="fc" id="L154">    when(message.get_content()).thenReturn(TEST_CONTENT);</span>
+<span class="fc" id="L155">    when(message.get_time()).thenReturn(date);</span>
+    /* Test return value */
+<span class="fc" id="L157">    boolean succeed = messageDAO.storeMessage(message, true);</span>
+<span class="fc" id="L158">    assertTrue(succeed);</span>
+    /* Test function calls' order and capture arguments */
+<span class="fc" id="L160">    InOrder order = inOrder(pstmt, connection, messageDAO);</span>
+<span class="fc" id="L161">    ArgumentCaptor&lt;String&gt; argsCap = ArgumentCaptor.forClass(String.class);</span>
+<span class="fc" id="L162">    order.verify(connection).prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS);</span>
+<span class="fc" id="L163">    order.verify(pstmt, times(4)).setString(anyInt(), argsCap.capture());</span>
+<span class="fc" id="L164">    order.verify(pstmt).setBoolean(5, true);</span>
+<span class="fc" id="L165">    order.verify(pstmt).setString(eq(6), anyString());</span>
+<span class="fc" id="L166">    order.verify(pstmt).execute();</span>
+<span class="fc" id="L167">    order.verify(pstmt).close();</span>
+<span class="fc" id="L168">    order.verify(connection).close();</span>
+<span class="fc" id="L169">    order.verifyNoMoreInteractions();</span>
+    /* Test arguments' order and value */
+<span class="fc" id="L171">    assertEquals(TEST_USERNAME, argsCap.getAllValues().get(1));</span>
+<span class="fc" id="L172">    assertEquals(TEST_CONTENT, argsCap.getAllValues().get(2));</span>
+<span class="fc" id="L173">  }</span>
 
   @Test
   void testStoreMessageWithImageThrowsSQLException() throws Exception {
-<span class="fc" id="L173">    messageDAO = spy(messageDAO);</span>
-    // Stub
-<span class="fc" id="L175">    when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);</span>
-<span class="fc" id="L176">    when(message.get_uuid()).thenReturn(UUID.fromString(TEST_UUID));</span>
-    // Test return value
-<span class="fc" id="L178">    boolean succeed = messageDAO.storeMessage(message, true);</span>
-<span class="fc" id="L179">    assertFalse(succeed);</span>
-    // Test error output
-<span class="fc" id="L181">    assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
-<span class="fc" id="L182">  }</span>
+<span class="fc" id="L177">    messageDAO = spy(messageDAO);</span>
+    /* Stub */
+<span class="fc" id="L179">    when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);</span>
+<span class="fc" id="L180">    when(message.get_uuid()).thenReturn(UUID.fromString(TEST_UUID));</span>
+    /* Test return value */
+<span class="fc" id="L182">    boolean succeed = messageDAO.storeMessage(message, true);</span>
+<span class="fc" id="L183">    assertFalse(succeed);</span>
+    /* Test error output */
+<span class="fc" id="L185">    assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L186">  }</span>
 
   @Test
   void testQueryMessageByUUIDReturnNoImage() throws Exception {
-<span class="fc" id="L186">    String SELECT = &quot;SELECT * FROM message WHERE uuid=(?)&quot;;</span>
-    // Stub
-<span class="fc" id="L188">    when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);</span>
-<span class="fc" id="L189">    when(pstmt.executeQuery()).thenReturn(rs);</span>
-<span class="fc" id="L190">    when(rs.getString(&quot;uuid&quot;)).thenReturn(TEST_UUID);</span>
-<span class="fc" id="L191">    when(rs.getString(&quot;username&quot;)).thenReturn(TEST_USERNAME);</span>
-<span class="fc" id="L192">    when(rs.getString(&quot;content&quot;)).thenReturn(TEST_CONTENT);</span>
-<span class="fc" id="L193">    when(rs.getString(&quot;time&quot;)).thenReturn(TEST_TIME);</span>
-<span class="fc" id="L194">    when(rs.getBoolean(&quot;withImage&quot;)).thenReturn(false);</span>
-<span class="fc" id="L195">    when(rs.next()).thenReturn(true, false); // Only one item in ResultSet</span>
-    // Test return value
-<span class="fc" id="L197">    List&lt;Message&gt; resultList = messageDAO.queryMessageByUUID(UUID.fromString(TEST_UUID));</span>
-<span class="fc" id="L198">    assertEquals(1, resultList.size());</span>
-<span class="fc" id="L199">    assertEquals(UUID.fromString(TEST_UUID), resultList.get(0).get_uuid());</span>
-<span class="fc" id="L200">    assertEquals(TEST_USERNAME, resultList.get(0).get_username());</span>
-<span class="fc" id="L201">    assertEquals(TEST_CONTENT, resultList.get(0).get_content());</span>
-<span class="fc" id="L202">    assertEquals(TEST_TIME, dateFormatter.format(resultList.get(0).get_time()));</span>
-<span class="fc" id="L203">    assertNull(resultList.get(0).get_path());</span>
-    // Test function calls' order
-<span class="fc" id="L205">    InOrder order = inOrder(connection, pstmt, rs);</span>
-<span class="fc" id="L206">    order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);</span>
-<span class="fc" id="L207">    order.verify(pstmt).executeQuery();</span>
-<span class="fc" id="L208">    order.verify(rs).next();</span>
-<span class="fc" id="L209">    order.verify(rs, times(4)).getString(anyString());</span>
-<span class="fc" id="L210">    order.verify(rs).getBoolean(anyString());</span>
-<span class="fc" id="L211">    order.verify(pstmt).close();</span>
-<span class="fc" id="L212">    order.verify(connection).close();</span>
-<span class="fc" id="L213">    order.verifyNoMoreInteractions();</span>
-<span class="fc" id="L214">  }</span>
+<span class="fc" id="L190">    String SELECT = &quot;SELECT * FROM message WHERE uuid=(?)&quot;;</span>
+    /* Stub */
+<span class="fc" id="L192">    when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);</span>
+<span class="fc" id="L193">    when(pstmt.executeQuery()).thenReturn(rs);</span>
+<span class="fc" id="L194">    when(rs.getString(&quot;uuid&quot;)).thenReturn(TEST_UUID);</span>
+<span class="fc" id="L195">    when(rs.getString(&quot;username&quot;)).thenReturn(TEST_USERNAME);</span>
+<span class="fc" id="L196">    when(rs.getString(&quot;content&quot;)).thenReturn(TEST_CONTENT);</span>
+<span class="fc" id="L197">    when(rs.getString(&quot;time&quot;)).thenReturn(TEST_TIME);</span>
+<span class="fc" id="L198">    when(rs.getBoolean(&quot;withImage&quot;)).thenReturn(false);</span>
+<span class="fc" id="L199">    when(rs.next()).thenReturn(true, false); /* Only one item in ResultSet */</span>
+    /* Test return value */
+<span class="fc" id="L201">    List&lt;Message&gt; resultList = messageDAO.queryMessageByUUID(UUID.fromString(TEST_UUID));</span>
+<span class="fc" id="L202">    assertEquals(1, resultList.size());</span>
+<span class="fc" id="L203">    assertEquals(UUID.fromString(TEST_UUID), resultList.get(0).get_uuid());</span>
+<span class="fc" id="L204">    assertEquals(TEST_USERNAME, resultList.get(0).get_username());</span>
+<span class="fc" id="L205">    assertEquals(TEST_CONTENT, resultList.get(0).get_content());</span>
+<span class="fc" id="L206">    assertEquals(TEST_TIME, dateFormatter.format(resultList.get(0).get_time()));</span>
+<span class="fc" id="L207">    assertNull(resultList.get(0).get_path());</span>
+    /* Test function calls' order */
+<span class="fc" id="L209">    InOrder order = inOrder(connection, pstmt, rs);</span>
+<span class="fc" id="L210">    order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);</span>
+<span class="fc" id="L211">    order.verify(pstmt).executeQuery();</span>
+<span class="fc" id="L212">    order.verify(rs).next();</span>
+<span class="fc" id="L213">    order.verify(rs, times(4)).getString(anyString());</span>
+<span class="fc" id="L214">    order.verify(rs).getBoolean(anyString());</span>
+<span class="fc" id="L215">    order.verify(pstmt).close();</span>
+<span class="fc" id="L216">    order.verify(connection).close();</span>
+<span class="fc" id="L217">    order.verifyNoMoreInteractions();</span>
+<span class="fc" id="L218">  }</span>
 
   @Test
   void testQueryMessageByUUIDReturnImage() throws Exception {
-<span class="fc" id="L218">    String SELECT = &quot;SELECT * FROM message WHERE uuid=(?)&quot;;</span>
-    // Stub
-<span class="fc" id="L220">    when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);</span>
-<span class="fc" id="L221">    when(pstmt.executeQuery()).thenReturn(rs);</span>
-<span class="fc" id="L222">    when(rs.getString(&quot;uuid&quot;)).thenReturn(TEST_UUID);</span>
-<span class="fc" id="L223">    when(rs.getString(&quot;username&quot;)).thenReturn(TEST_USERNAME);</span>
-<span class="fc" id="L224">    when(rs.getString(&quot;content&quot;)).thenReturn(TEST_CONTENT);</span>
-<span class="fc" id="L225">    when(rs.getString(&quot;time&quot;)).thenReturn(TEST_TIME);</span>
-<span class="fc" id="L226">    when(rs.getBoolean(&quot;withImage&quot;)).thenReturn(true);</span>
-<span class="fc" id="L227">    when(rs.getString(&quot;path&quot;)).thenReturn(TEST_PATH);</span>
-<span class="fc" id="L228">    when(rs.next()).thenReturn(true, false); // Only one item in ResultSet</span>
-    // Test return value
-<span class="fc" id="L230">    List&lt;Message&gt; resultList = messageDAO.queryMessageByUUID(UUID.fromString(TEST_UUID));</span>
-<span class="fc" id="L231">    assertEquals(1, resultList.size());</span>
-<span class="fc" id="L232">    assertEquals(UUID.fromString(TEST_UUID), resultList.get(0).get_uuid());</span>
-<span class="fc" id="L233">    assertEquals(TEST_USERNAME, resultList.get(0).get_username());</span>
-<span class="fc" id="L234">    assertEquals(TEST_CONTENT, resultList.get(0).get_content());</span>
-<span class="fc" id="L235">    assertEquals(TEST_TIME, dateFormatter.format(resultList.get(0).get_time()));</span>
-<span class="fc" id="L236">    assertEquals(TEST_PATH, resultList.get(0).get_path());</span>
-    // Test function calls' order
-<span class="fc" id="L238">    InOrder order = inOrder(connection, pstmt, rs);</span>
-<span class="fc" id="L239">    order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);</span>
-<span class="fc" id="L240">    order.verify(pstmt).executeQuery();</span>
-<span class="fc" id="L241">    order.verify(rs).next();</span>
-<span class="fc" id="L242">    order.verify(rs, times(4)).getString(anyString());</span>
-<span class="fc" id="L243">    order.verify(rs).getBoolean(anyString());</span>
-<span class="fc" id="L244">    order.verify(rs).getString(anyString());</span>
-<span class="fc" id="L245">    order.verify(pstmt).close();</span>
-<span class="fc" id="L246">    order.verify(connection).close();</span>
-<span class="fc" id="L247">    order.verifyNoMoreInteractions();</span>
-<span class="fc" id="L248">  }</span>
+<span class="fc" id="L222">    String SELECT = &quot;SELECT * FROM message WHERE uuid=(?)&quot;;</span>
+    /* Stub */
+<span class="fc" id="L224">    when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);</span>
+<span class="fc" id="L225">    when(pstmt.executeQuery()).thenReturn(rs);</span>
+<span class="fc" id="L226">    when(rs.getString(&quot;uuid&quot;)).thenReturn(TEST_UUID);</span>
+<span class="fc" id="L227">    when(rs.getString(&quot;username&quot;)).thenReturn(TEST_USERNAME);</span>
+<span class="fc" id="L228">    when(rs.getString(&quot;content&quot;)).thenReturn(TEST_CONTENT);</span>
+<span class="fc" id="L229">    when(rs.getString(&quot;time&quot;)).thenReturn(TEST_TIME);</span>
+<span class="fc" id="L230">    when(rs.getBoolean(&quot;withImage&quot;)).thenReturn(true);</span>
+<span class="fc" id="L231">    when(rs.getString(&quot;path&quot;)).thenReturn(TEST_PATH);</span>
+<span class="fc" id="L232">    when(rs.next()).thenReturn(true, false); /* Only one item in ResultSet */</span>
+    /* Test return value */
+<span class="fc" id="L234">    List&lt;Message&gt; resultList = messageDAO.queryMessageByUUID(UUID.fromString(TEST_UUID));</span>
+<span class="fc" id="L235">    assertEquals(1, resultList.size());</span>
+<span class="fc" id="L236">    assertEquals(UUID.fromString(TEST_UUID), resultList.get(0).get_uuid());</span>
+<span class="fc" id="L237">    assertEquals(TEST_USERNAME, resultList.get(0).get_username());</span>
+<span class="fc" id="L238">    assertEquals(TEST_CONTENT, resultList.get(0).get_content());</span>
+<span class="fc" id="L239">    assertEquals(TEST_TIME, dateFormatter.format(resultList.get(0).get_time()));</span>
+<span class="fc" id="L240">    assertEquals(TEST_PATH, resultList.get(0).get_path());</span>
+    /* Test function calls' order */
+<span class="fc" id="L242">    InOrder order = inOrder(connection, pstmt, rs);</span>
+<span class="fc" id="L243">    order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);</span>
+<span class="fc" id="L244">    order.verify(pstmt).executeQuery();</span>
+<span class="fc" id="L245">    order.verify(rs).next();</span>
+<span class="fc" id="L246">    order.verify(rs, times(4)).getString(anyString());</span>
+<span class="fc" id="L247">    order.verify(rs).getBoolean(anyString());</span>
+<span class="fc" id="L248">    order.verify(rs).getString(anyString());</span>
+<span class="fc" id="L249">    order.verify(pstmt).close();</span>
+<span class="fc" id="L250">    order.verify(connection).close();</span>
+<span class="fc" id="L251">    order.verifyNoMoreInteractions();</span>
+<span class="fc" id="L252">  }</span>
 
   @Test
   void testQueryMessageByNullUUIDThrowsException() {
-<span class="pc" id="L252">    assertThrows(NullPointerException.class, () -&gt; messageDAO.queryMessageByUUID(null));</span>
-<span class="fc" id="L253">  }</span>
+<span class="pc" id="L256">    assertThrows(NullPointerException.class, () -&gt; messageDAO.queryMessageByUUID(null));</span>
+<span class="fc" id="L257">  }</span>
 
   @Test
   void testQueryMessageByUUIDThrowsSQLExceptionWhenPreparingStatement() throws Exception {
-    // Stub
-<span class="fc" id="L258">    when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);</span>
-    // Test return value
-<span class="fc" id="L260">    List&lt;Message&gt; resultList = messageDAO.queryMessageByUUID(UUID.fromString(TEST_UUID));</span>
-<span class="fc" id="L261">    assertTrue(resultList.isEmpty()); // resultList should be empty</span>
-    // Test error output
-<span class="fc" id="L263">    assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
-<span class="fc" id="L264">  }</span>
+    /* Stub */
+<span class="fc" id="L262">    when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);</span>
+    /* Test return value */
+<span class="fc" id="L264">    List&lt;Message&gt; resultList = messageDAO.queryMessageByUUID(UUID.fromString(TEST_UUID));</span>
+<span class="fc" id="L265">    assertTrue(resultList.isEmpty()); /* resultList should be empty */</span>
+    /* Test error output */
+<span class="fc" id="L267">    assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L268">  }</span>
 
   @Test
   void testQueryMessageByUUIDThrowsSQLExceptionWhenExecutingQuery() throws Exception {
-    // Stub
-<span class="fc" id="L269">    when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);</span>
-<span class="fc" id="L270">    when(pstmt.executeQuery()).thenThrow(SQLException.class);</span>
-    // Test return value
-<span class="fc" id="L272">    List&lt;Message&gt; resultList = messageDAO.queryMessageByUUID(UUID.fromString(TEST_UUID));</span>
-<span class="fc" id="L273">    assertTrue(resultList.isEmpty()); // resultList should be empty</span>
-    // Test error output
-<span class="fc" id="L275">    assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
-<span class="fc" id="L276">  }</span>
+    /* Stub */
+<span class="fc" id="L273">    when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);</span>
+<span class="fc" id="L274">    when(pstmt.executeQuery()).thenThrow(SQLException.class);</span>
+    /* Test return value */
+<span class="fc" id="L276">    List&lt;Message&gt; resultList = messageDAO.queryMessageByUUID(UUID.fromString(TEST_UUID));</span>
+<span class="fc" id="L277">    assertTrue(resultList.isEmpty()); /* resultList should be empty */</span>
+    /* Test error output */
+<span class="fc" id="L279">    assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L280">  }</span>
 
   @Test
   void testQueryMessageWithSize1AndMillisec1572364800000WithImage() throws Exception {
-<span class="fc" id="L280">    String SELECT = &quot;SELECT TOP 1 * FROM message WHERE time &lt;= ? ORDER BY time DESC&quot;;</span>
-    // Stub
-<span class="fc" id="L282">    when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);</span>
-<span class="fc" id="L283">    when(pstmt.executeQuery()).thenReturn(rs);</span>
-<span class="fc" id="L284">    when(rs.next()).thenReturn(true, false); // rs has only 1 item</span>
-<span class="fc" id="L285">    when(rs.getString(&quot;uuid&quot;)).thenReturn(TEST_UUID);</span>
-<span class="fc" id="L286">    when(rs.getString(&quot;username&quot;)).thenReturn(TEST_USERNAME);</span>
-<span class="fc" id="L287">    when(rs.getString(&quot;content&quot;)).thenReturn(TEST_CONTENT);</span>
-<span class="fc" id="L288">    when(rs.getString(&quot;time&quot;)).thenReturn(TEST_TIME);</span>
-<span class="fc" id="L289">    when(rs.getBoolean(&quot;withImage&quot;)).thenReturn(true);</span>
-<span class="fc" id="L290">    when(rs.getString(&quot;path&quot;)).thenReturn(TEST_PATH);</span>
-    // Test return value
-<span class="fc" id="L292">    List&lt;Message&gt; resultList = messageDAO.queryMessage(1, TEST_MILLISEC);</span>
-<span class="fc" id="L293">    assertEquals(1, resultList.size());</span>
-<span class="fc" id="L294">    assertEquals(UUID.fromString(TEST_UUID), resultList.get(0).get_uuid());</span>
-<span class="fc" id="L295">    assertEquals(TEST_USERNAME, resultList.get(0).get_username());</span>
-<span class="fc" id="L296">    assertEquals(TEST_CONTENT, resultList.get(0).get_content());</span>
-<span class="fc" id="L297">    assertEquals(TEST_TIME, dateFormatter.format(resultList.get(0).get_time()));</span>
-    // Test function calls' order
-<span class="fc" id="L299">    InOrder order = inOrder(connection, pstmt, rs);</span>
-<span class="fc" id="L300">    order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);</span>
-<span class="fc" id="L301">    order.verify(pstmt).executeQuery();</span>
-<span class="fc" id="L302">    order.verify(rs).next();</span>
-<span class="fc" id="L303">    order.verify(rs, times(4)).getString(anyString());</span>
-<span class="fc" id="L304">    order.verify(rs).getBoolean(anyString());</span>
-<span class="fc" id="L305">    order.verify(rs).getString(anyString());</span>
+<span class="fc" id="L284">    String SELECT = &quot;SELECT TOP 1 * FROM message WHERE time &lt;= ? ORDER BY time DESC&quot;;</span>
+    /* Stub */
+<span class="fc" id="L286">    when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);</span>
+<span class="fc" id="L287">    when(pstmt.executeQuery()).thenReturn(rs);</span>
+<span class="fc" id="L288">    when(rs.next()).thenReturn(true, false); /* rs has only 1 item */</span>
+<span class="fc" id="L289">    when(rs.getString(&quot;uuid&quot;)).thenReturn(TEST_UUID);</span>
+<span class="fc" id="L290">    when(rs.getString(&quot;username&quot;)).thenReturn(TEST_USERNAME);</span>
+<span class="fc" id="L291">    when(rs.getString(&quot;content&quot;)).thenReturn(TEST_CONTENT);</span>
+<span class="fc" id="L292">    when(rs.getString(&quot;time&quot;)).thenReturn(TEST_TIME);</span>
+<span class="fc" id="L293">    when(rs.getBoolean(&quot;withImage&quot;)).thenReturn(true);</span>
+<span class="fc" id="L294">    when(rs.getString(&quot;path&quot;)).thenReturn(TEST_PATH);</span>
+    /* Test return value */
+<span class="fc" id="L296">    List&lt;Message&gt; resultList = messageDAO.queryMessage(1, TEST_MILLISEC);</span>
+<span class="fc" id="L297">    assertEquals(1, resultList.size());</span>
+<span class="fc" id="L298">    assertEquals(UUID.fromString(TEST_UUID), resultList.get(0).get_uuid());</span>
+<span class="fc" id="L299">    assertEquals(TEST_USERNAME, resultList.get(0).get_username());</span>
+<span class="fc" id="L300">    assertEquals(TEST_CONTENT, resultList.get(0).get_content());</span>
+<span class="fc" id="L301">    assertEquals(TEST_TIME, dateFormatter.format(resultList.get(0).get_time()));</span>
+    /* Test function calls' order */
+<span class="fc" id="L303">    InOrder order = inOrder(connection, pstmt, rs);</span>
+<span class="fc" id="L304">    order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);</span>
+<span class="fc" id="L305">    order.verify(pstmt).executeQuery();</span>
 <span class="fc" id="L306">    order.verify(rs).next();</span>
-<span class="fc" id="L307">    order.verify(pstmt).close();</span>
-<span class="fc" id="L308">    order.verify(connection).close();</span>
-<span class="fc" id="L309">    order.verifyNoMoreInteractions();</span>
-<span class="fc" id="L310">  }</span>
+<span class="fc" id="L307">    order.verify(rs, times(4)).getString(anyString());</span>
+<span class="fc" id="L308">    order.verify(rs).getBoolean(anyString());</span>
+<span class="fc" id="L309">    order.verify(rs).getString(anyString());</span>
+<span class="fc" id="L310">    order.verify(rs).next();</span>
+<span class="fc" id="L311">    order.verify(pstmt).close();</span>
+<span class="fc" id="L312">    order.verify(connection).close();</span>
+<span class="fc" id="L313">    order.verifyNoMoreInteractions();</span>
+<span class="fc" id="L314">  }</span>
 
   @Test
   void testQueryMessageWithSize2AndMillisec1572364800000WithoutImage() throws Exception {
-<span class="fc" id="L314">    String SELECT = &quot;SELECT TOP 2 * FROM message WHERE time &lt;= ? ORDER BY time DESC&quot;;</span>
-    // Stub
-<span class="fc" id="L316">    when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);</span>
-<span class="fc" id="L317">    when(pstmt.executeQuery()).thenReturn(rs);</span>
-<span class="fc" id="L318">    when(rs.next()).thenReturn(true, true, false); // rs has 2 items</span>
-<span class="fc" id="L319">    when(rs.getString(&quot;uuid&quot;)).thenReturn(TEST_UUID, TEST_UUID2);</span>
-<span class="fc" id="L320">    when(rs.getString(&quot;username&quot;)).thenReturn(TEST_USERNAME, TEST_USERNAME2);</span>
-<span class="fc" id="L321">    when(rs.getString(&quot;content&quot;)).thenReturn(TEST_CONTENT, TEST_CONTENT2);</span>
-<span class="fc" id="L322">    when(rs.getString(&quot;time&quot;)).thenReturn(TEST_TIME, TEST_TIME2);</span>
-<span class="fc" id="L323">    when(rs.getBoolean(&quot;withImage&quot;)).thenReturn(false, false);</span>
-    // Test return value
-<span class="fc" id="L325">    List&lt;Message&gt; resultList = messageDAO.queryMessage(2, TEST_MILLISEC);</span>
-<span class="fc" id="L326">    assertEquals(2, resultList.size());</span>
-<span class="fc" id="L327">    assertEquals(UUID.fromString(TEST_UUID), resultList.get(0).get_uuid());</span>
-<span class="fc" id="L328">    assertEquals(TEST_USERNAME, resultList.get(0).get_username());</span>
-<span class="fc" id="L329">    assertEquals(TEST_CONTENT, resultList.get(0).get_content());</span>
-<span class="fc" id="L330">    assertEquals(TEST_TIME, dateFormatter.format(resultList.get(0).get_time()));</span>
-<span class="fc" id="L331">    assertEquals(UUID.fromString(TEST_UUID2), resultList.get(1).get_uuid());</span>
-<span class="fc" id="L332">    assertEquals(TEST_USERNAME2, resultList.get(1).get_username());</span>
-<span class="fc" id="L333">    assertEquals(TEST_CONTENT2, resultList.get(1).get_content());</span>
-<span class="fc" id="L334">    assertEquals(TEST_TIME2, dateFormatter.format(resultList.get(1).get_time()));</span>
-    // Test function calls' order
-<span class="fc" id="L336">    InOrder order = inOrder(connection, pstmt, rs);</span>
-<span class="fc" id="L337">    order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);</span>
-<span class="fc" id="L338">    order.verify(pstmt).executeQuery();</span>
-<span class="fc" id="L339">    order.verify(rs).next();</span>
-<span class="fc" id="L340">    order.verify(rs, times(4)).getString(anyString());</span>
-<span class="fc" id="L341">    order.verify(rs).getBoolean(anyString());</span>
-<span class="fc" id="L342">    order.verify(rs).next();</span>
-<span class="fc" id="L343">    order.verify(rs, times(4)).getString(anyString());</span>
-<span class="fc" id="L344">    order.verify(rs).getBoolean(anyString());</span>
-<span class="fc" id="L345">    order.verify(rs).next();</span>
-<span class="fc" id="L346">    order.verify(pstmt).close();</span>
-<span class="fc" id="L347">    order.verify(connection).close();</span>
-<span class="fc" id="L348">    order.verifyNoMoreInteractions();</span>
-<span class="fc" id="L349">  }</span>
+<span class="fc" id="L318">    String SELECT = &quot;SELECT TOP 2 * FROM message WHERE time &lt;= ? ORDER BY time DESC&quot;;</span>
+    /* Stub */
+<span class="fc" id="L320">    when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);</span>
+<span class="fc" id="L321">    when(pstmt.executeQuery()).thenReturn(rs);</span>
+<span class="fc" id="L322">    when(rs.next()).thenReturn(true, true, false); /* rs has 2 items */</span>
+<span class="fc" id="L323">    when(rs.getString(&quot;uuid&quot;)).thenReturn(TEST_UUID, TEST_UUID2);</span>
+<span class="fc" id="L324">    when(rs.getString(&quot;username&quot;)).thenReturn(TEST_USERNAME, TEST_USERNAME2);</span>
+<span class="fc" id="L325">    when(rs.getString(&quot;content&quot;)).thenReturn(TEST_CONTENT, TEST_CONTENT2);</span>
+<span class="fc" id="L326">    when(rs.getString(&quot;time&quot;)).thenReturn(TEST_TIME, TEST_TIME2);</span>
+<span class="fc" id="L327">    when(rs.getBoolean(&quot;withImage&quot;)).thenReturn(false, false);</span>
+    /* Test return value */
+<span class="fc" id="L329">    List&lt;Message&gt; resultList = messageDAO.queryMessage(2, TEST_MILLISEC);</span>
+<span class="fc" id="L330">    assertEquals(2, resultList.size());</span>
+<span class="fc" id="L331">    assertEquals(UUID.fromString(TEST_UUID), resultList.get(0).get_uuid());</span>
+<span class="fc" id="L332">    assertEquals(TEST_USERNAME, resultList.get(0).get_username());</span>
+<span class="fc" id="L333">    assertEquals(TEST_CONTENT, resultList.get(0).get_content());</span>
+<span class="fc" id="L334">    assertEquals(TEST_TIME, dateFormatter.format(resultList.get(0).get_time()));</span>
+<span class="fc" id="L335">    assertEquals(UUID.fromString(TEST_UUID2), resultList.get(1).get_uuid());</span>
+<span class="fc" id="L336">    assertEquals(TEST_USERNAME2, resultList.get(1).get_username());</span>
+<span class="fc" id="L337">    assertEquals(TEST_CONTENT2, resultList.get(1).get_content());</span>
+<span class="fc" id="L338">    assertEquals(TEST_TIME2, dateFormatter.format(resultList.get(1).get_time()));</span>
+    /* Test function calls' order */
+<span class="fc" id="L340">    InOrder order = inOrder(connection, pstmt, rs);</span>
+<span class="fc" id="L341">    order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);</span>
+<span class="fc" id="L342">    order.verify(pstmt).executeQuery();</span>
+<span class="fc" id="L343">    order.verify(rs).next();</span>
+<span class="fc" id="L344">    order.verify(rs, times(4)).getString(anyString());</span>
+<span class="fc" id="L345">    order.verify(rs).getBoolean(anyString());</span>
+<span class="fc" id="L346">    order.verify(rs).next();</span>
+<span class="fc" id="L347">    order.verify(rs, times(4)).getString(anyString());</span>
+<span class="fc" id="L348">    order.verify(rs).getBoolean(anyString());</span>
+<span class="fc" id="L349">    order.verify(rs).next();</span>
+<span class="fc" id="L350">    order.verify(pstmt).close();</span>
+<span class="fc" id="L351">    order.verify(connection).close();</span>
+<span class="fc" id="L352">    order.verifyNoMoreInteractions();</span>
+<span class="fc" id="L353">  }</span>
 
   @Test
   void testQueryMessageThrowsSQLException() throws Exception {
-    // Stub
-<span class="fc" id="L354">    when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);</span>
-    // Test return value
-<span class="fc" id="L356">    List&lt;Message&gt; result = messageDAO.queryMessage(0, 0);</span>
-<span class="fc" id="L357">    assertEquals(0, result.size());</span>
-    // Test error output
-<span class="fc" id="L359">    assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
-<span class="fc" id="L360">  }</span>
+    /* Stub */
+<span class="fc" id="L358">    when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);</span>
+    /* Test return value */
+<span class="fc" id="L360">    List&lt;Message&gt; result = messageDAO.queryMessage(0, 0);</span>
+<span class="fc" id="L361">    assertEquals(0, result.size());</span>
+    /* Test error output */
+<span class="fc" id="L363">    assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L364">  }</span>
 
   @Test
   void testQueryUpdates() throws Exception {
-<span class="fc" id="L364">    String SELECT = &quot;SELECT COUNT(*) FROM message WHERE time &gt; ?&quot;;</span>
-    // Stub
-<span class="fc" id="L366">    when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);</span>
-<span class="fc" id="L367">    when(pstmt.executeQuery()).thenReturn(rs);</span>
-<span class="fc" id="L368">    when(rs.next()).thenReturn(true);</span>
-<span class="fc" id="L369">    when(rs.getInt(1)).thenReturn(3);</span>
-    // Test return value
-<span class="fc" id="L371">    int result = messageDAO.queryUpdates(TEST_MILLISEC);</span>
-<span class="fc" id="L372">    assertEquals(3, result);</span>
-    // Test function calls' order
-<span class="fc" id="L374">    InOrder order = inOrder(connection, pstmt, rs);</span>
-<span class="fc" id="L375">    order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);</span>
-<span class="fc" id="L376">    order.verify(pstmt).executeQuery();</span>
-<span class="fc" id="L377">    order.verify(rs).next();</span>
-<span class="fc" id="L378">    order.verify(rs).getInt(1);</span>
-<span class="fc" id="L379">    order.verify(pstmt).close();</span>
-<span class="fc" id="L380">    order.verify(connection).close();</span>
-<span class="fc" id="L381">    order.verifyNoMoreInteractions();</span>
-<span class="fc" id="L382">  }</span>
+<span class="fc" id="L368">    String SELECT = &quot;SELECT COUNT(*) FROM message WHERE time &gt; ?&quot;;</span>
+    /* Stub */
+<span class="fc" id="L370">    when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);</span>
+<span class="fc" id="L371">    when(pstmt.executeQuery()).thenReturn(rs);</span>
+<span class="fc" id="L372">    when(rs.next()).thenReturn(true);</span>
+<span class="fc" id="L373">    when(rs.getInt(1)).thenReturn(3);</span>
+    /* Test return value */
+<span class="fc" id="L375">    int result = messageDAO.queryUpdates(TEST_MILLISEC);</span>
+<span class="fc" id="L376">    assertEquals(3, result);</span>
+    /* Test function calls' order */
+<span class="fc" id="L378">    InOrder order = inOrder(connection, pstmt, rs);</span>
+<span class="fc" id="L379">    order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);</span>
+<span class="fc" id="L380">    order.verify(pstmt).executeQuery();</span>
+<span class="fc" id="L381">    order.verify(rs).next();</span>
+<span class="fc" id="L382">    order.verify(rs).getInt(1);</span>
+<span class="fc" id="L383">    order.verify(pstmt).close();</span>
+<span class="fc" id="L384">    order.verify(connection).close();</span>
+<span class="fc" id="L385">    order.verifyNoMoreInteractions();</span>
+<span class="fc" id="L386">  }</span>
 
   @Test
   void testQueryUpdatesThrowsSQLException() throws Exception {
-    // Stub
-<span class="fc" id="L387">    when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);</span>
-    // Test return value
-<span class="fc" id="L389">    int result = messageDAO.queryUpdates(TEST_MILLISEC);</span>
-<span class="fc" id="L390">    assertEquals(0, result);</span>
-    // Test error output
-<span class="fc" id="L392">    assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
-<span class="fc" id="L393">  }</span>
+    /* Stub */
+<span class="fc" id="L391">    when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);</span>
+    /* Test return value */
+<span class="fc" id="L393">    int result = messageDAO.queryUpdates(TEST_MILLISEC);</span>
+<span class="fc" id="L394">    assertEquals(0, result);</span>
+    /* Test error output */
+<span class="fc" id="L396">    assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L397">  }</span>
 
   @Test
   void testQueryUpdatesWhenResultSetHasNothing() throws Exception {
-<span class="fc" id="L397">    String SELECT = &quot;SELECT COUNT(*) FROM message WHERE time &gt; ?&quot;;</span>
-    // Stub
-<span class="fc" id="L399">    when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);</span>
-<span class="fc" id="L400">    when(pstmt.executeQuery()).thenReturn(rs);</span>
-<span class="fc" id="L401">    when(rs.next()).thenReturn(false);</span>
-    // Test return value
-<span class="fc" id="L403">    int result = messageDAO.queryUpdates(TEST_MILLISEC);</span>
-<span class="fc" id="L404">    assertEquals(0, result);</span>
-    // Test function calls' order
-<span class="fc" id="L406">    InOrder order = inOrder(connection, pstmt, rs);</span>
-<span class="fc" id="L407">    order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);</span>
-<span class="fc" id="L408">    order.verify(pstmt).executeQuery();</span>
-<span class="fc" id="L409">    order.verify(rs).next();</span>
-<span class="fc" id="L410">    order.verify(pstmt).close();</span>
-<span class="fc" id="L411">    order.verify(connection).close();</span>
-<span class="fc" id="L412">    order.verifyNoMoreInteractions();</span>
-<span class="fc" id="L413">  }</span>
+<span class="fc" id="L401">    String SELECT = &quot;SELECT COUNT(*) FROM message WHERE time &gt; ?&quot;;</span>
+    /* Stub */
+<span class="fc" id="L403">    when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);</span>
+<span class="fc" id="L404">    when(pstmt.executeQuery()).thenReturn(rs);</span>
+<span class="fc" id="L405">    when(rs.next()).thenReturn(false);</span>
+    /* Test return value */
+<span class="fc" id="L407">    int result = messageDAO.queryUpdates(TEST_MILLISEC);</span>
+<span class="fc" id="L408">    assertEquals(0, result);</span>
+    /* Test function calls' order */
+<span class="fc" id="L410">    InOrder order = inOrder(connection, pstmt, rs);</span>
+<span class="fc" id="L411">    order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);</span>
+<span class="fc" id="L412">    order.verify(pstmt).executeQuery();</span>
+<span class="fc" id="L413">    order.verify(rs).next();</span>
+<span class="fc" id="L414">    order.verify(pstmt).close();</span>
+<span class="fc" id="L415">    order.verify(connection).close();</span>
+<span class="fc" id="L416">    order.verifyNoMoreInteractions();</span>
+<span class="fc" id="L417">  }</span>
 
   @Test
   void testClearTable() throws Exception {
-<span class="fc" id="L417">    String DELETE = &quot;DELETE FROM message&quot;;</span>
-    // Stub
-<span class="fc" id="L419">    when(connection.prepareStatement(DELETE, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);</span>
-    // Test return value
-<span class="fc" id="L421">    boolean result = messageDAO.clearTable();</span>
-<span class="fc" id="L422">    assertTrue(result);</span>
-    // Test function calls' order
-<span class="fc" id="L424">    InOrder order = inOrder(connection, pstmt);</span>
-<span class="fc" id="L425">    order.verify(connection).prepareStatement(DELETE, Statement.RETURN_GENERATED_KEYS);</span>
-<span class="fc" id="L426">    order.verify(pstmt).execute();</span>
-<span class="fc" id="L427">    order.verify(pstmt).close();</span>
-<span class="fc" id="L428">    order.verify(connection).close();</span>
-<span class="fc" id="L429">    order.verifyNoMoreInteractions();</span>
-<span class="fc" id="L430">  }</span>
+<span class="fc" id="L421">    String DELETE = &quot;DELETE FROM message&quot;;</span>
+    /* Stub */
+<span class="fc" id="L423">    when(connection.prepareStatement(DELETE, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);</span>
+    /* Test return value */
+<span class="fc" id="L425">    boolean result = messageDAO.clearTable();</span>
+<span class="fc" id="L426">    assertTrue(result);</span>
+    /* Test function calls' order */
+<span class="fc" id="L428">    InOrder order = inOrder(connection, pstmt);</span>
+<span class="fc" id="L429">    order.verify(connection).prepareStatement(DELETE, Statement.RETURN_GENERATED_KEYS);</span>
+<span class="fc" id="L430">    order.verify(pstmt).execute();</span>
+<span class="fc" id="L431">    order.verify(pstmt).close();</span>
+<span class="fc" id="L432">    order.verify(connection).close();</span>
+<span class="fc" id="L433">    order.verifyNoMoreInteractions();</span>
+<span class="fc" id="L434">  }</span>
 
   @Test
   void testClearTableThrowsSQLException() throws Exception {
-    // Stub
-<span class="fc" id="L435">    when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);</span>
-<span class="fc" id="L436">    messageDAO.clearTable();</span>
-    // Test error output
-<span class="fc" id="L438">    assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
-<span class="fc" id="L439">  }</span>
+    /* Stub */
+<span class="fc" id="L439">    when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);</span>
+<span class="fc" id="L440">    messageDAO.clearTable();</span>
+    /* Test error output */
+<span class="fc" id="L442">    assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L443">  }</span>
 
   @Test
   void testCloseStatementThrowsSQLException() throws Exception {
-    // Stub
-<span class="fc" id="L444">    doThrow(SQLException.class).when(pstmt).close();</span>
-<span class="fc" id="L445">    messageDAO.closeStatementAndConnection(pstmt, connection);</span>
-    // Test error output
-<span class="fc" id="L447">    assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
-<span class="fc" id="L448">  }</span>
+    /* Stub */
+<span class="fc" id="L448">    doThrow(SQLException.class).when(pstmt).close();</span>
+<span class="fc" id="L449">    messageDAO.closeStatementAndConnection(pstmt, connection);</span>
+    /* Test error output */
+<span class="fc" id="L451">    assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L452">  }</span>
 
   @Test
   void testCloseConnectionThrowsSQLException() throws Exception {
-    // Stub
-<span class="fc" id="L453">    doThrow(SQLException.class).when(connection).close();</span>
-<span class="fc" id="L454">    messageDAO.closeStatementAndConnection(pstmt, connection);</span>
-    // Test error output
-<span class="fc" id="L456">    assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
-<span class="fc" id="L457">  }</span>
+    /* Stub */
+<span class="fc" id="L457">    doThrow(SQLException.class).when(connection).close();</span>
+<span class="fc" id="L458">    messageDAO.closeStatementAndConnection(pstmt, connection);</span>
+    /* Test error output */
+<span class="fc" id="L460">    assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L461">  }</span>
 
   @Test
   void testCloseNullStatement() {
-<span class="fc" id="L461">    assertDoesNotThrow(() -&gt; messageDAO.closeStatementAndConnection(null, connection));</span>
-<span class="fc" id="L462">  }</span>
+<span class="fc" id="L465">    assertDoesNotThrow(() -&gt; messageDAO.closeStatementAndConnection(null, connection));</span>
+<span class="fc" id="L466">  }</span>
 
   @Test
   void testCloseNullConnection() {
-<span class="fc" id="L466">    assertDoesNotThrow(() -&gt; messageDAO.closeStatementAndConnection(pstmt, null));</span>
-<span class="fc" id="L467">  }</span>
+<span class="fc" id="L470">    assertDoesNotThrow(() -&gt; messageDAO.closeStatementAndConnection(pstmt, null));</span>
+<span class="fc" id="L471">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>
