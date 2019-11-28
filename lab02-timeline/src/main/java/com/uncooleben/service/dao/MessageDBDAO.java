@@ -10,7 +10,7 @@ public class MessageDBDAO {
 
 	public MessageDBDAO() {
 		if (platform.equals("0")) {
-			actualDAO = new MessageMySQLDAO();
+			actualDAO = new MessageDaoMysqlImpl();
 		} else if (platform.equals("1")) {
 			actualDAO = new MessageSQLServerDAO();
 		}
