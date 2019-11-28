@@ -159,7 +159,7 @@ public class MessageSQLServerDAO implements MessageDAO {
       pstmt = conn.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);
       pstmt.setString(1, formattedDate);
       ResultSet rs = pstmt.executeQuery();
-      while (rs.next()) {
+      if (rs.next()) {
         return rs.getInt(1);
       }
     } catch (SQLException sqle) {
