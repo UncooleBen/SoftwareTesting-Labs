@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MessageDaoMysqlImplTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">lab02_timeline$com_uncooleben_in_lab02_timeline.exec</a> &gt; <a href="index.source.html" class="el_package">com.uncooleben.service.dao</a> &gt; <span class="el_source">MessageDaoMysqlImplTest.java</span></div><h1>MessageDaoMysqlImplTest.java</h1><pre class="source lang-java linenums">package com.uncooleben.service.dao;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.*;
+import org.mockito.ArgumentCaptor;
+
+import com.uncooleben.model.Message;
+
+
+/*
+ * This class is the unit test of class MessageDaoMysqlImpl.
+ *
+ * @author Juntao Peng
+ * @date 2019.11.27
+ */
+@TestMethodOrder(OrderAnnotation.class)
+<span class="fc" id="L42">class MessageDaoMysqlImplTest {</span>
+
+<span class="fc" id="L44">    private Connection connection = mock(Connection.class);</span>
+<span class="fc" id="L45">    private PreparedStatement pstmt = mock(PreparedStatement.class);</span>
+<span class="fc" id="L46">	private ResultSet rs = mock(ResultSet.class);</span>
+    private MessageDaoMysqlImpl messageDAO;
+    private long milliTime;
+    private SimpleDateFormat format;
+    private ByteArrayOutputStream outContent;
+    private ByteArrayOutputStream errContent;
+    private PrintStream originalOut;
+    private PrintStream originalErr;
+    private SQLException test_sql_exception;
+    private ArgumentCaptor&lt;String&gt; stringArgumentCaptor;
+	private ArgumentCaptor&lt;Boolean&gt; booleanArgumentCaptor;
+	private ArgumentCaptor&lt;Integer&gt; integerArgumentCaptor;
+
+<span class="fc" id="L59">    class TestableMessageDaoMysqlImpl extends MessageDaoMysqlImpl {</span>
+
+        @Override
+        protected void loadDriver() {
+
+<span class="nc" id="L64">        }</span>
+
+        @Override
+        protected Connection getConnection() {
+<span class="fc" id="L68">            return connection;</span>
+        }
+    }
+
+    @BeforeEach
+    void init() {
+<span class="fc" id="L74">        this.messageDAO = new TestableMessageDaoMysqlImpl();</span>
+<span class="fc" id="L75">        this.milliTime = System.currentTimeMillis();</span>
+<span class="fc" id="L76">        this.format = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);</span>
+<span class="fc" id="L77">		this.test_sql_exception = new SQLException();</span>
+<span class="fc" id="L78">        this.outContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L79">        this.errContent = new ByteArrayOutputStream();</span>
+<span class="fc" id="L80">        this.originalOut = System.out;</span>
+<span class="fc" id="L81">        this.originalErr = System.err;</span>
+<span class="fc" id="L82">        System.setOut(new PrintStream(outContent));</span>
+<span class="fc" id="L83">        System.setErr(new PrintStream(errContent));</span>
+<span class="fc" id="L84">		this.stringArgumentCaptor = ArgumentCaptor.forClass(String.class);</span>
+<span class="fc" id="L85">		this.booleanArgumentCaptor = ArgumentCaptor.forClass(Boolean.class);</span>
+<span class="fc" id="L86">		this.integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);</span>
+<span class="fc" id="L87">    }</span>
+
+    @AfterEach
+    void tear_down() throws IOException {
+<span class="fc" id="L91">        System.setErr(this.originalErr);</span>
+<span class="fc" id="L92">        System.setOut(this.originalOut);</span>
+<span class="fc" id="L93">        this.outContent.close();</span>
+<span class="fc" id="L94">        this.errContent.close();</span>
+<span class="fc" id="L95">    }</span>
+
+    @Order(1)
+    @Test
+    void test_throws_sql_exception_when_store_message() throws SQLException {
+<span class="fc" id="L100">        when(connection.prepareStatement(anyString(), anyInt())).thenThrow(test_sql_exception);</span>
+<span class="fc" id="L101">        this.messageDAO.storeMessage(mock(Message.class), false);</span>
+<span class="fc" id="L102">        assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L103">    }</span>
+
+    @Order(2)
+    @Test
+    void test_store_one_message_without_image() throws SQLException {
+<span class="fc" id="L108">        Date date = new Date(milliTime);</span>
+<span class="fc" id="L109">        Message message = new Message(&quot;james&quot;, &quot;im bond&quot;, date);</span>
+        /* Mocking behaviours */
+<span class="fc" id="L111">		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);</span>
+        /* Run the method */
+<span class="fc" id="L113">        boolean succeeded = this.messageDAO.storeMessage(message, false);</span>
+        /* Assertions */
+<span class="fc" id="L115">        assertTrue(succeeded);</span>
+<span class="fc" id="L116">        verify(pstmt, times(5)).setString(anyInt(), stringArgumentCaptor.capture());</span>
+<span class="fc" id="L117">        verify(pstmt, times(1)).setBoolean(anyInt(), booleanArgumentCaptor.capture());</span>
+<span class="fc" id="L118">        assertAll(</span>
+<span class="fc" id="L119">				() -&gt; assertEquals(&quot;james&quot;, stringArgumentCaptor.getAllValues().get(1)),</span>
+<span class="fc" id="L120">				() -&gt; assertEquals(&quot;im bond&quot;, stringArgumentCaptor.getAllValues().get(2)),</span>
+<span class="fc" id="L121">				() -&gt; assertNull(stringArgumentCaptor.getAllValues().get(4)),</span>
+<span class="fc" id="L122">				() -&gt; assertFalse(booleanArgumentCaptor.getAllValues().get(0))</span>
+		);
+<span class="fc" id="L124">    }</span>
+
+    @Order(3)
+    @Test
+    void test_store_one_message_with_image() throws SQLException {
+<span class="fc" id="L129">        Date date = new Date(milliTime);</span>
+<span class="fc" id="L130">        Message message = new Message(&quot;james&quot;, &quot;im bond&quot;, date);</span>
+        /* Mocking behaviours */
+<span class="fc" id="L132">		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);</span>
+        /* Run the method */
+<span class="fc" id="L134">        boolean succeeded = this.messageDAO.storeMessage(message, true);</span>
+        /* Assertions */
+<span class="fc" id="L136">		verify(pstmt, times(5)).setString(anyInt(), stringArgumentCaptor.capture());</span>
+<span class="fc" id="L137">		verify(pstmt, times(1)).setBoolean(anyInt(), booleanArgumentCaptor.capture());</span>
+<span class="fc" id="L138">		assertAll(</span>
+<span class="fc" id="L139">				() -&gt; assertTrue(succeeded),</span>
+<span class="fc" id="L140">				() -&gt; assertEquals(&quot;james&quot;, stringArgumentCaptor.getAllValues().get(1)),</span>
+<span class="fc" id="L141">				() -&gt; assertEquals(&quot;im bond&quot;, stringArgumentCaptor.getAllValues().get(2)),</span>
+<span class="fc" id="L142">				() -&gt; assertEquals(System.getenv(&quot;TEMP&quot;) + &quot;\\timeline_imgs&quot;, stringArgumentCaptor.getAllValues().get(4)),</span>
+<span class="fc" id="L143">				() -&gt; assertEquals(true, booleanArgumentCaptor.getAllValues().get(0))</span>
+		);
+<span class="fc" id="L145">    }</span>
+
+    @Order(4)
+    @Test
+    void test_throws_sql_exception_when_query_by_uuid() throws SQLException {
+<span class="fc" id="L150">    	UUID uuid = UUID.randomUUID();</span>
+		/* Mocking behaviours */
+<span class="fc" id="L152">    	when(connection.prepareStatement(anyString(), anyInt())).thenThrow(test_sql_exception);</span>
+		/* Run the method */
+<span class="fc" id="L154">        this.messageDAO.queryMessageByUUID(uuid);</span>
+		/* Assertions */
+<span class="fc" id="L156">        assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L157">    }</span>
+
+    @Order(5)
+    @Test
+    void test_throws_parse_exception_when_query_by_uuid() throws SQLException {
+<span class="fc" id="L162">        UUID uuid = UUID.randomUUID();</span>
+<span class="fc" id="L163">        String uuid_str = uuid.toString();</span>
+<span class="fc" id="L164">        String username = &quot;james bond&quot;;</span>
+<span class="fc" id="L165">        String content = &quot;hello&quot;;</span>
+<span class="fc" id="L166">        String time = &quot;MALFORMED DATE STRING&quot;;</span>
+        /* Mocking behaviors */
+<span class="fc" id="L168">		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);</span>
+<span class="fc" id="L169">		when(pstmt.executeQuery()).thenReturn(rs);</span>
+<span class="fc" id="L170">		when(rs.next()).thenReturn(true, false); // First call returns true, second call returns false</span>
+<span class="fc" id="L171">		when(rs.getString(&quot;uuid&quot;)).thenReturn(uuid_str);</span>
+<span class="fc" id="L172">		when(rs.getString(&quot;username&quot;)).thenReturn(username);</span>
+<span class="fc" id="L173">		when(rs.getString(&quot;content&quot;)).thenReturn(content);</span>
+<span class="fc" id="L174">		when(rs.getString(&quot;time&quot;)).thenReturn(time);</span>
+        /* Run the method */
+<span class="fc" id="L176">		this.messageDAO.queryMessageByUUID(uuid);</span>
+        /* Assertions */
+<span class="fc" id="L178">		assertTrue(errContent.toString().contains(&quot;java.text.ParseException&quot;));</span>
+<span class="fc" id="L179">    }</span>
+
+    @Order(6)
+    @Test
+    void test_query_message_by_uuid() throws SQLException {
+<span class="fc" id="L184">        UUID uuid = UUID.randomUUID();</span>
+<span class="fc" id="L185">        String uuid_str = uuid.toString();</span>
+<span class="fc" id="L186">        String username = &quot;james bond&quot;;</span>
+<span class="fc" id="L187">        String content = &quot;hello&quot;;</span>
+<span class="fc" id="L188">        String time = this.format.format(new Date(this.milliTime));</span>
+        /* Mocking behaviors */
+<span class="fc" id="L190">		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);</span>
+<span class="fc" id="L191">		when(pstmt.executeQuery()).thenReturn(rs);</span>
+<span class="fc" id="L192">		when(rs.next()).thenReturn(true, false); /* First call returns true, second call returns false */</span>
+<span class="fc" id="L193">		when(rs.getString(&quot;uuid&quot;)).thenReturn(uuid_str);</span>
+<span class="fc" id="L194">		when(rs.getString(&quot;username&quot;)).thenReturn(username);</span>
+<span class="fc" id="L195">		when(rs.getString(&quot;content&quot;)).thenReturn(content);</span>
+<span class="fc" id="L196">		when(rs.getString(&quot;time&quot;)).thenReturn(time);</span>
+        /* Run the method */
+<span class="fc" id="L198">		List&lt;Message&gt; result_list = this.messageDAO.queryMessageByUUID(uuid);</span>
+        /* Assertions */
+<span class="fc" id="L200">		verify(pstmt, times(1)).setString(anyInt(), stringArgumentCaptor.capture());</span>
+<span class="fc" id="L201">        Message result_message = result_list.get(0);</span>
+<span class="fc" id="L202">        assertAll(</span>
+<span class="fc" id="L203">				() -&gt; assertEquals(1, result_list.size()),</span>
+<span class="fc" id="L204">                () -&gt; assertEquals(uuid, result_message.get_uuid()),</span>
+<span class="fc" id="L205">                () -&gt; assertEquals(username, result_message.get_username()),</span>
+<span class="fc" id="L206">                () -&gt; assertEquals(content, result_message.get_content()),</span>
+<span class="fc" id="L207">                () -&gt; assertEquals(time, format.format(result_message.get_time())),</span>
+<span class="fc" id="L208">				() -&gt; assertEquals(uuid_str, stringArgumentCaptor.getAllValues().get(0))</span>
+        );
+<span class="fc" id="L210">    }</span>
+
+    @Order(7)
+    @Test
+    void test_throws_sql_exception_when_query_message() throws SQLException {
+    	/* Mocking behaviors */
+<span class="fc" id="L216">    	when(connection.prepareStatement(anyString(), anyInt())).thenThrow(test_sql_exception);</span>
+        /* Run the method */
+<span class="fc" id="L218">    	this.messageDAO.queryMessage(0, 0L);</span>
+    	/* Assertions */
+<span class="fc" id="L220">        assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L221">    }</span>
+
+    @Order(8)
+    @Test
+    void test_throws_parse_exception_when_query_message() throws SQLException {
+<span class="fc" id="L226">        UUID uuid = UUID.randomUUID();</span>
+<span class="fc" id="L227">        String uuid_str = uuid.toString();</span>
+<span class="fc" id="L228">        String username = &quot;james bond&quot;;</span>
+<span class="fc" id="L229">        String content = &quot;hello&quot;;</span>
+<span class="fc" id="L230">        String time = &quot;MALFORMED DATE STRING&quot;;</span>
+        /* Mocking behaviors */
+<span class="fc" id="L232">		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);</span>
+<span class="fc" id="L233">		when(pstmt.executeQuery()).thenReturn(rs);</span>
+<span class="fc" id="L234">		when(rs.next()).thenReturn(true, false); // First call returns true, second call returns false</span>
+<span class="fc" id="L235">		when(rs.getString(&quot;uuid&quot;)).thenReturn(uuid_str);</span>
+<span class="fc" id="L236">		when(rs.getString(&quot;username&quot;)).thenReturn(username);</span>
+<span class="fc" id="L237">		when(rs.getString(&quot;content&quot;)).thenReturn(content);</span>
+<span class="fc" id="L238">		when(rs.getString(&quot;time&quot;)).thenReturn(time);</span>
+        /* Run the method */
+<span class="fc" id="L240">        this.messageDAO.queryMessage(0, 0L);</span>
+        /* Assertions */
+<span class="fc" id="L242">        assertTrue(errContent.toString().contains(&quot;java.text.ParseException&quot;));</span>
+<span class="fc" id="L243">    }</span>
+
+    @Order(9)
+    @Test
+    void test_query_message() throws SQLException {
+    	/* Prepare suppliers */
+<span class="fc" id="L249">        List&lt;Message&gt; expected = new ArrayList&lt;Message&gt;(5);</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">        for (int index = 0; index &lt; 5; index++) {</span>
+<span class="fc" id="L251">            UUID uuid = UUID.randomUUID();</span>
+<span class="fc" id="L252">            String username = &quot;USER&quot; + UUID.randomUUID().toString();</span>
+<span class="fc" id="L253">            String content = &quot;CONTENT&quot; + UUID.randomUUID().toString();</span>
+<span class="fc" id="L254">            Date time = new Date(this.milliTime);</span>
+<span class="fc" id="L255">            Message newMessage = new Message(uuid, username, content, time);</span>
+<span class="fc" id="L256">            expected.add(newMessage);</span>
+        }
+<span class="fc" id="L258">        Supplier&lt;Stream&lt;String&gt;&gt; uuids = () -&gt; expected.stream().map(Message::get_uuid).map(UUID::toString);</span>
+<span class="fc" id="L259">        Supplier&lt;Stream&lt;String&gt;&gt; usernames = () -&gt; expected.stream().map(Message::get_username);</span>
+<span class="fc" id="L260">        Supplier&lt;Stream&lt;String&gt;&gt; contents = () -&gt; expected.stream().map(Message::get_content);</span>
+<span class="fc" id="L261">        Supplier&lt;Stream&lt;String&gt;&gt; times = () -&gt; expected.stream().map(Message::get_time)</span>
+<span class="fc" id="L262">                .map(date -&gt; (this.format.format(date)));</span>
+		/* Mocking behaviors */
+<span class="fc" id="L264">		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);</span>
+<span class="fc" id="L265">		when(pstmt.executeQuery()).thenReturn(rs);</span>
+<span class="fc" id="L266">		when(rs.next()).thenReturn(true, true, true, true, true, false); /* First call returns</span>
+		 true, sequential calls return true, true, true, true, false. */
+<span class="fc" id="L268">		when(rs.getString(&quot;uuid&quot;)).thenReturn(uuids.get().findFirst().get(),</span>
+<span class="fc" id="L269">				uuids.get().skip(1).toArray(String[]::new));</span>
+<span class="fc" id="L270">		when(rs.getString(&quot;username&quot;)).thenReturn(usernames.get().findFirst().get(),</span>
+<span class="fc" id="L271">				usernames.get().skip(1).toArray(String[]::new));</span>
+<span class="fc" id="L272">		when(rs.getString(&quot;content&quot;)).thenReturn(contents.get().findFirst().get(),</span>
+<span class="fc" id="L273">				contents.get().skip(1).toArray(String[]::new));</span>
+<span class="fc" id="L274">		when(rs.getString(&quot;time&quot;)).thenReturn(times.get().findFirst().get(),</span>
+<span class="fc" id="L275">				times.get().skip(1).toArray(String[]::new));</span>
+        /* Run the method */
+<span class="fc" id="L277">        List&lt;Message&gt; actual = this.messageDAO.queryMessage(5, milliTime);</span>
+        /* Assertions */
+<span class="fc" id="L279">		verify(pstmt, times(1)).setString(eq(1), stringArgumentCaptor.capture());</span>
+<span class="fc" id="L280">		verify(pstmt, times(1)).setInt(eq(2), integerArgumentCaptor.capture());</span>
+<span class="fc" id="L281">		assertAll(</span>
+<span class="fc" id="L282">					() -&gt; assertEquals(5, actual.size()),</span>
+<span class="fc" id="L283">					() -&gt; assertEquals(expected.get(0), actual.get(0)),</span>
+<span class="fc" id="L284">					() -&gt; assertEquals(expected.get(1), actual.get(1)),</span>
+<span class="fc" id="L285">					() -&gt; assertEquals(expected.get(2), actual.get(2)),</span>
+<span class="fc" id="L286">					() -&gt; assertEquals(expected.get(3), actual.get(3)),</span>
+<span class="fc" id="L287">					() -&gt; assertEquals(expected.get(4), actual.get(4)),</span>
+<span class="fc" id="L288">					() -&gt; assertEquals(this.format.format(new Date(milliTime)), stringArgumentCaptor.getAllValues().get(0)),</span>
+<span class="fc" id="L289">					() -&gt; assertEquals(5, integerArgumentCaptor.getAllValues().get(0))</span>
+		);
+<span class="fc" id="L291">    }</span>
+
+    @Order(10)
+    @Test
+    void test_throws_sql_exception_when_query_updates() throws SQLException {
+    	/* Mocking behaviors */
+<span class="fc" id="L297">    	when(connection.prepareStatement(anyString(), anyInt())).thenThrow(test_sql_exception);</span>
+    	/* Run the method */
+<span class="fc" id="L299">        this.messageDAO.queryUpdates(0L);</span>
+        /* Assertions */
+<span class="fc" id="L301">        assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L302">    }</span>
+
+    @Order(11)
+    @Test
+    void test_query_updates() throws SQLException {
+<span class="fc" id="L307">        int expected = 5;</span>
+        /* Mocking behaviors */
+<span class="fc" id="L309">		when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);</span>
+<span class="fc" id="L310">		when(pstmt.executeQuery()).thenReturn(rs);</span>
+<span class="fc" id="L311">		when(rs.next()).thenReturn(true, false);</span>
+<span class="fc" id="L312">		when(rs.getInt(1)).thenReturn(expected);</span>
+		/* Run the method */
+<span class="fc" id="L314">        int actual = this.messageDAO.queryUpdates(milliTime);</span>
+        /* Assertions */
+<span class="fc" id="L316">		verify(pstmt, times(1)).setString(eq(1), stringArgumentCaptor.capture());</span>
+<span class="fc" id="L317">        assertAll(</span>
+<span class="fc" id="L318">					() -&gt; assertEquals(expected, actual),</span>
+<span class="fc" id="L319">					() -&gt; assertEquals(this.format.format(new Date(milliTime)), stringArgumentCaptor.getAllValues().get(0))</span>
+		);
+<span class="fc" id="L321">    }</span>
+
+    @Order(12)
+    @Test
+    void test_sql_exception_clear_table() throws SQLException {
+    	/* Mocking behaviors */
+<span class="fc" id="L327">        when(connection.prepareStatement(anyString(), anyInt())).thenThrow(test_sql_exception);</span>
+        /* Run the method */
+<span class="fc" id="L329">        this.messageDAO.clearTable();</span>
+        /* Assertions */
+<span class="fc" id="L331">        assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L332">    }</span>
+
+    @Order(13)
+    @Test
+    void test_clear_table() throws SQLException {
+		/* Mocking behaviors */
+<span class="fc" id="L338">        when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);</span>
+		/* Run the method */
+<span class="fc" id="L340">        boolean success = this.messageDAO.clearTable();</span>
+		/* Assertions */
+<span class="fc" id="L342">        assertTrue(success);</span>
+<span class="fc" id="L343">    }</span>
+
+    @Order(14)
+    @Test
+    void test_sql_exception_close_statement() throws SQLException {
+		/* Mocking behaviors */
+<span class="fc" id="L349">        doThrow(test_sql_exception).when(pstmt).close();</span>
+		/* Run the method */
+<span class="fc" id="L351">        this.messageDAO.closeStatementAndConnection(pstmt, connection);</span>
+		/* Assertions */
+<span class="fc" id="L353">        assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L354">    }</span>
+
+    @Order(15)
+    @Test
+    void test_sql_exception_close_connection() throws SQLException {
+		/* Mocking behaviors */
+<span class="fc" id="L360">        doThrow(test_sql_exception).when(connection).close();</span>
+		/* Run the method */
+<span class="fc" id="L362">        this.messageDAO.closeStatementAndConnection(pstmt, connection);</span>
+		/* Assertions */
+<span class="fc" id="L364">        assertTrue(errContent.toString().contains(&quot;java.sql.SQLException&quot;));</span>
+<span class="fc" id="L365">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>
