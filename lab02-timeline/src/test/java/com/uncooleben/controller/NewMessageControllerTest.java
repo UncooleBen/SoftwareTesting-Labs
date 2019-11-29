@@ -15,6 +15,15 @@ import com.uncooleben.model.Message;
 import com.uncooleben.service.dao.MessageDAO;
 import com.uncooleben.service.file.FAO;
 
+/**
+ * This class is a part of Software-Testing lab02 timeline.
+ *
+ * <p>
+ * This is a Test for NewMessageController.class.
+ *
+ * @author Yuanjie Guo
+ */
+
 class NewMessageControllerTest {
 
 	private MessageDAO messageDAO = mock(MessageDAO.class);
@@ -23,7 +32,7 @@ class NewMessageControllerTest {
 	private FAO fao = mock(FAO.class);
 
 	@Test
-	void test_onSubmit_true() {
+	void test_onSubmit_when_image_exist() {
 		newmessageController.messageDAO = messageDAO;
 		newmessageController.fao = fao;
 		ModelAndView result = newmessageController.onSubmit("彭钧涛", "彭哥牛逼", multipartFile);
@@ -33,7 +42,7 @@ class NewMessageControllerTest {
 	}
 
 	@Test
-	void test_onSubmit_false() {
+	void test_onSubmit_when_image_is_empty() {
 		newmessageController.messageDAO = messageDAO;
 		newmessageController.fao = fao;
 		when(multipartFile.isEmpty()).thenReturn(true);

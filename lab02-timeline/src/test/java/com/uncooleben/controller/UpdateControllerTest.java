@@ -8,6 +8,15 @@ import org.junit.jupiter.api.Test;
 
 import com.uncooleben.service.dao.MessageDAO;
 
+/**
+ * This class is a part of Software-Testing lab02 timeline.
+ *
+ * <p>
+ * This is a Test for UpdateController.class.
+ *
+ * @author Yuanjie Guo
+ */
+
 class UpdateControllerTest {
 
 	private MessageDAO messageDAO = mock(MessageDAO.class);
