@@ -97,6 +97,7 @@ class MessageDaoMysqlImplTest {
         when(connection.prepareStatement(anyString(), anyInt())).thenThrow(test_sql_exception);
         this.messageDAO.storeMessage(mock(Message.class), false);
         assertTrue(errContent.toString().contains("java.sql.SQLException"));
+		assertTrue(false); // This will fail.
     }
 
     @Order(2)
