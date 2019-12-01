@@ -14,6 +14,15 @@ import org.junit.jupiter.api.Test;
 import com.uncooleben.model.Message;
 import com.uncooleben.service.dao.MessageDAO;
 
+/**
+ * This class is a part of Software-Testing lab02 timeline.
+ *
+ * <p>
+ * This is a Test for  MoreController.class.
+ *
+ * @author Yuanjie Guo
+ */
+
 class MoreControllerTest {
 
 	private MessageDAO messageDAO = mock(MessageDAO.class);

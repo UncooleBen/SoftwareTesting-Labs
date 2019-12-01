@@ -12,6 +12,15 @@ import org.junit.jupiter.api.Test;
 
 import com.uncooleben.service.file.FAO;
 
+/**
+ * This class is a part of Software-Testing lab02 timeline.
+ *
+ * <p>
+ * This is a Test for ImageController.class.
+ *
+ * @author Yuanjie Guo
+ */
+
 class ImageControllerTest {
 
 	private FAO fao = mock(FAO.class);

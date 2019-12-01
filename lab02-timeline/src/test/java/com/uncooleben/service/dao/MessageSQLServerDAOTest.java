@@ -36,6 +36,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 
+/**
+ * This class is a unit test of class MessageSQLServerDAO.
+ *
+ * @author Shangzhen Li
+ */
 public class MessageSQLServerDAOTest {
   private MessageSQLServerDAO messageDAO;
   private Connection connection = mock(Connection.class);
@@ -43,15 +48,15 @@ public class MessageSQLServerDAOTest {
   private Message message = mock(Message.class);
   private ResultSet rs = mock(ResultSet.class);
   private Locale defaultLocale;
-  ByteArrayOutputStream errContent;
-  PrintStream originalErr;
+  private ByteArrayOutputStream errContent;
+  private PrintStream originalErr;
   private DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
   private final String TEST_USERNAME = "testUsername";
   private final String TEST_CONTENT = "testContent";
   private final String TEST_UUID = "0-0-0-0-0";
   private final String TEST_TIME = "2019-10-30 12:00:00";
   private final String TEST_PATH = "testPath";
-  private final long TEST_MILLISEC = 1572364800000L; // Equal to TEST_TIME
+  private final long TEST_MILLISEC = 1572364800000L; /* Equal to TEST_TIME */
   private final String TEST_USERNAME2 = "testUsername2";
   private final String TEST_CONTENT2 = "testContent2";
   private final String TEST_UUID2 = "0-0-0-0-1";
@@ -72,7 +77,7 @@ public class MessageSQLServerDAOTest {
     messageDAO = new MessageSQLServerDAOFake();
     defaultLocale = Locale.getDefault();
     Locale.setDefault(Locale.CHINA);
-    // Change error output stream to capture error output
+    /* Change error output stream to capture error output */
     errContent = new ByteArrayOutputStream();
     originalErr = System.err;
     System.setErr(new PrintStream(errContent));
@@ -81,7 +86,7 @@ public class MessageSQLServerDAOTest {
   @AfterEach
   void restore() {
     Locale.setDefault(defaultLocale);
-    // Change error output stream back to default
+    /* Change error output stream back to default */
     System.setErr(originalErr);
   }
 
@@ -95,16 +100,16 @@ public class MessageSQLServerDAOTest {
     String INSERT =
         "INSERT INTO message(uuid, username, content, time, withImage, path) VALUES(?,?,?,?,?,?)";
     Date date = mock(Date.class);
-    // Stub
+    /* Stub */
     when(connection.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);
     when(message.get_uuid()).thenReturn(UUID.fromString(TEST_UUID));
     when(message.get_username()).thenReturn(TEST_USERNAME);
     when(message.get_content()).thenReturn(TEST_CONTENT);
     when(message.get_time()).thenReturn(date);
-    // Test return value
+    /* Test return value */
     boolean succeed = messageDAO.storeMessage(message, false);
     assertTrue(succeed);
-    // Test function calls' order and capture arguments
+    /* Test function calls' order and capture arguments */
     InOrder order = inOrder(pstmt, connection);
     ArgumentCaptor<String> argsCap = ArgumentCaptor.forClass(String.class);
     order.verify(connection).prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS);
@@ -115,20 +120,19 @@ public class MessageSQLServerDAOTest {
     order.verify(pstmt).close();
     order.verify(connection).close();
     order.verifyNoMoreInteractions();
-    // Test arguments' order and value
+    /* Test arguments' order and value */
     assertEquals(TEST_USERNAME, argsCap.getAllValues().get(1));
     assertEquals(TEST_CONTENT, argsCap.getAllValues().get(2));
   }
 
   @Test
   void testStoreMessageWithoutImageThrowsSQLException() throws Exception {
-    // Stub
+    /* Stub */
     when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);
-    // Test return value
-    boolean succeed = true;
-    succeed = messageDAO.storeMessage(message, false);
+    /* Test return value */
+    boolean succeed = messageDAO.storeMessage(message, false);
     assertFalse(succeed);
-    // Test error output
+    /* Test error output */
     assertTrue(errContent.toString().contains("java.sql.SQLException"));
   }
 
@@ -143,16 +147,16 @@ public class MessageSQLServerDAOTest {
         "INSERT INTO message(uuid, username, content, time, withImage, path) VALUES(?,?,?,?,?,?)";
     Date date = mock(Date.class);
     messageDAO = spy(messageDAO);
-    // Stub
+    /* Stub */
     when(connection.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);
     when(message.get_uuid()).thenReturn(UUID.fromString(TEST_UUID));
     when(message.get_username()).thenReturn(TEST_USERNAME);
     when(message.get_content()).thenReturn(TEST_CONTENT);
     when(message.get_time()).thenReturn(date);
-    // Test return value
+    /* Test return value */
     boolean succeed = messageDAO.storeMessage(message, true);
     assertTrue(succeed);
-    // Test function calls' order and capture arguments
+    /* Test function calls' order and capture arguments */
     InOrder order = inOrder(pstmt, connection, messageDAO);
     ArgumentCaptor<String> argsCap = ArgumentCaptor.forClass(String.class);
     order.verify(connection).prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS);
@@ -163,7 +167,7 @@ public class MessageSQLServerDAOTest {
     order.verify(pstmt).close();
     order.verify(connection).close();
     order.verifyNoMoreInteractions();
-    // Test arguments' order and value
+    /* Test arguments' order and value */
     assertEquals(TEST_USERNAME, argsCap.getAllValues().get(1));
     assertEquals(TEST_CONTENT, argsCap.getAllValues().get(2));
   }
@@ -171,20 +175,20 @@ public class MessageSQLServerDAOTest {
   @Test
   void testStoreMessageWithImageThrowsSQLException() throws Exception {
     messageDAO = spy(messageDAO);
-    // Stub
+    /* Stub */
     when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);
     when(message.get_uuid()).thenReturn(UUID.fromString(TEST_UUID));
-    // Test return value
+    /* Test return value */
     boolean succeed = messageDAO.storeMessage(message, true);
     assertFalse(succeed);
-    // Test error output
+    /* Test error output */
     assertTrue(errContent.toString().contains("java.sql.SQLException"));
   }
 
   @Test
   void testQueryMessageByUUIDReturnNoImage() throws Exception {
     String SELECT = "SELECT * FROM message WHERE uuid=(?)";
-    // Stub
+    /* Stub */
     when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);
     when(pstmt.executeQuery()).thenReturn(rs);
     when(rs.getString("uuid")).thenReturn(TEST_UUID);
@@ -192,8 +196,8 @@ public class MessageSQLServerDAOTest {
     when(rs.getString("content")).thenReturn(TEST_CONTENT);
     when(rs.getString("time")).thenReturn(TEST_TIME);
     when(rs.getBoolean("withImage")).thenReturn(false);
-    when(rs.next()).thenReturn(true, false); // Only one item in ResultSet
-    // Test return value
+    when(rs.next()).thenReturn(true, false); /* Only one item in ResultSet */
+    /* Test return value */
     List<Message> resultList = messageDAO.queryMessageByUUID(UUID.fromString(TEST_UUID));
     assertEquals(1, resultList.size());
     assertEquals(UUID.fromString(TEST_UUID), resultList.get(0).get_uuid());
@@ -201,7 +205,7 @@ public class MessageSQLServerDAOTest {
     assertEquals(TEST_CONTENT, resultList.get(0).get_content());
     assertEquals(TEST_TIME, dateFormatter.format(resultList.get(0).get_time()));
     assertNull(resultList.get(0).get_path());
-    // Test function calls' order
+    /* Test function calls' order */
     InOrder order = inOrder(connection, pstmt, rs);
     order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);
     order.verify(pstmt).executeQuery();
@@ -216,7 +220,7 @@ public class MessageSQLServerDAOTest {
   @Test
   void testQueryMessageByUUIDReturnImage() throws Exception {
     String SELECT = "SELECT * FROM message WHERE uuid=(?)";
-    // Stub
+    /* Stub */
     when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);
     when(pstmt.executeQuery()).thenReturn(rs);
     when(rs.getString("uuid")).thenReturn(TEST_UUID);
@@ -225,8 +229,8 @@ public class MessageSQLServerDAOTest {
     when(rs.getString("time")).thenReturn(TEST_TIME);
     when(rs.getBoolean("withImage")).thenReturn(true);
     when(rs.getString("path")).thenReturn(TEST_PATH);
-    when(rs.next()).thenReturn(true, false); // Only one item in ResultSet
-    // Test return value
+    when(rs.next()).thenReturn(true, false); /* Only one item in ResultSet */
+    /* Test return value */
     List<Message> resultList = messageDAO.queryMessageByUUID(UUID.fromString(TEST_UUID));
     assertEquals(1, resultList.size());
     assertEquals(UUID.fromString(TEST_UUID), resultList.get(0).get_uuid());
@@ -234,7 +238,7 @@ public class MessageSQLServerDAOTest {
     assertEquals(TEST_CONTENT, resultList.get(0).get_content());
     assertEquals(TEST_TIME, dateFormatter.format(resultList.get(0).get_time()));
     assertEquals(TEST_PATH, resultList.get(0).get_path());
-    // Test function calls' order
+    /* Test function calls' order */
     InOrder order = inOrder(connection, pstmt, rs);
     order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);
     order.verify(pstmt).executeQuery();
@@ -254,48 +258,48 @@ public class MessageSQLServerDAOTest {
 
   @Test
   void testQueryMessageByUUIDThrowsSQLExceptionWhenPreparingStatement() throws Exception {
-    // Stub
+    /* Stub */
     when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);
-    // Test return value
+    /* Test return value */
     List<Message> resultList = messageDAO.queryMessageByUUID(UUID.fromString(TEST_UUID));
-    assertTrue(resultList.isEmpty()); // resultList should be empty
-    // Test error output
+    assertTrue(resultList.isEmpty()); /* resultList should be empty */
+    /* Test error output */
     assertTrue(errContent.toString().contains("java.sql.SQLException"));
   }
 
   @Test
   void testQueryMessageByUUIDThrowsSQLExceptionWhenExecutingQuery() throws Exception {
-    // Stub
+    /* Stub */
     when(connection.prepareStatement(anyString(), anyInt())).thenReturn(pstmt);
     when(pstmt.executeQuery()).thenThrow(SQLException.class);
-    // Test return value
+    /* Test return value */
     List<Message> resultList = messageDAO.queryMessageByUUID(UUID.fromString(TEST_UUID));
-    assertTrue(resultList.isEmpty()); // resultList should be empty
-    // Test error output
+    assertTrue(resultList.isEmpty()); /* resultList should be empty */
+    /* Test error output */
     assertTrue(errContent.toString().contains("java.sql.SQLException"));
   }
 
   @Test
   void testQueryMessageWithSize1AndMillisec1572364800000WithImage() throws Exception {
     String SELECT = "SELECT TOP 1 * FROM message WHERE time <= ? ORDER BY time DESC";
-    // Stub
+    /* Stub */
     when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);
     when(pstmt.executeQuery()).thenReturn(rs);
-    when(rs.next()).thenReturn(true, false); // rs has only 1 item
+    when(rs.next()).thenReturn(true, false); /* rs has only 1 item */
     when(rs.getString("uuid")).thenReturn(TEST_UUID);
     when(rs.getString("username")).thenReturn(TEST_USERNAME);
     when(rs.getString("content")).thenReturn(TEST_CONTENT);
     when(rs.getString("time")).thenReturn(TEST_TIME);
     when(rs.getBoolean("withImage")).thenReturn(true);
     when(rs.getString("path")).thenReturn(TEST_PATH);
-    // Test return value
+    /* Test return value */
     List<Message> resultList = messageDAO.queryMessage(1, TEST_MILLISEC);
     assertEquals(1, resultList.size());
     assertEquals(UUID.fromString(TEST_UUID), resultList.get(0).get_uuid());
     assertEquals(TEST_USERNAME, resultList.get(0).get_username());
     assertEquals(TEST_CONTENT, resultList.get(0).get_content());
     assertEquals(TEST_TIME, dateFormatter.format(resultList.get(0).get_time()));
-    // Test function calls' order
+    /* Test function calls' order */
     InOrder order = inOrder(connection, pstmt, rs);
     order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);
     order.verify(pstmt).executeQuery();
@@ -312,16 +316,16 @@ public class MessageSQLServerDAOTest {
   @Test
   void testQueryMessageWithSize2AndMillisec1572364800000WithoutImage() throws Exception {
     String SELECT = "SELECT TOP 2 * FROM message WHERE time <= ? ORDER BY time DESC";
-    // Stub
+    /* Stub */
     when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);
     when(pstmt.executeQuery()).thenReturn(rs);
-    when(rs.next()).thenReturn(true, true, false); // rs has 2 items
+    when(rs.next()).thenReturn(true, true, false); /* rs has 2 items */
     when(rs.getString("uuid")).thenReturn(TEST_UUID, TEST_UUID2);
     when(rs.getString("username")).thenReturn(TEST_USERNAME, TEST_USERNAME2);
     when(rs.getString("content")).thenReturn(TEST_CONTENT, TEST_CONTENT2);
     when(rs.getString("time")).thenReturn(TEST_TIME, TEST_TIME2);
     when(rs.getBoolean("withImage")).thenReturn(false, false);
-    // Test return value
+    /* Test return value */
     List<Message> resultList = messageDAO.queryMessage(2, TEST_MILLISEC);
     assertEquals(2, resultList.size());
     assertEquals(UUID.fromString(TEST_UUID), resultList.get(0).get_uuid());
@@ -332,7 +336,7 @@ public class MessageSQLServerDAOTest {
     assertEquals(TEST_USERNAME2, resultList.get(1).get_username());
     assertEquals(TEST_CONTENT2, resultList.get(1).get_content());
     assertEquals(TEST_TIME2, dateFormatter.format(resultList.get(1).get_time()));
-    // Test function calls' order
+    /* Test function calls' order */
     InOrder order = inOrder(connection, pstmt, rs);
     order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);
     order.verify(pstmt).executeQuery();
@@ -350,27 +354,27 @@ public class MessageSQLServerDAOTest {
 
   @Test
   void testQueryMessageThrowsSQLException() throws Exception {
-    // Stub
+    /* Stub */
     when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);
-    // Test return value
+    /* Test return value */
     List<Message> result = messageDAO.queryMessage(0, 0);
     assertEquals(0, result.size());
-    // Test error output
+    /* Test error output */
     assertTrue(errContent.toString().contains("java.sql.SQLException"));
   }
 
   @Test
   void testQueryUpdates() throws Exception {
     String SELECT = "SELECT COUNT(*) FROM message WHERE time > ?";
-    // Stub
+    /* Stub */
     when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);
     when(pstmt.executeQuery()).thenReturn(rs);
     when(rs.next()).thenReturn(true);
     when(rs.getInt(1)).thenReturn(3);
-    // Test return value
+    /* Test return value */
     int result = messageDAO.queryUpdates(TEST_MILLISEC);
     assertEquals(3, result);
-    // Test function calls' order
+    /* Test function calls' order */
     InOrder order = inOrder(connection, pstmt, rs);
     order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);
     order.verify(pstmt).executeQuery();
@@ -383,26 +387,26 @@ public class MessageSQLServerDAOTest {
 
   @Test
   void testQueryUpdatesThrowsSQLException() throws Exception {
-    // Stub
+    /* Stub */
     when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);
-    // Test return value
+    /* Test return value */
     int result = messageDAO.queryUpdates(TEST_MILLISEC);
     assertEquals(0, result);
-    // Test error output
+    /* Test error output */
     assertTrue(errContent.toString().contains("java.sql.SQLException"));
   }
 
   @Test
   void testQueryUpdatesWhenResultSetHasNothing() throws Exception {
     String SELECT = "SELECT COUNT(*) FROM message WHERE time > ?";
-    // Stub
+    /* Stub */
     when(connection.prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);
     when(pstmt.executeQuery()).thenReturn(rs);
     when(rs.next()).thenReturn(false);
-    // Test return value
+    /* Test return value */
     int result = messageDAO.queryUpdates(TEST_MILLISEC);
     assertEquals(0, result);
-    // Test function calls' order
+    /* Test function calls' order */
     InOrder order = inOrder(connection, pstmt, rs);
     order.verify(connection).prepareStatement(SELECT, Statement.RETURN_GENERATED_KEYS);
     order.verify(pstmt).executeQuery();
@@ -415,12 +419,12 @@ public class MessageSQLServerDAOTest {
   @Test
   void testClearTable() throws Exception {
     String DELETE = "DELETE FROM message";
-    // Stub
+    /* Stub */
     when(connection.prepareStatement(DELETE, Statement.RETURN_GENERATED_KEYS)).thenReturn(pstmt);
-    // Test return value
+    /* Test return value */
     boolean result = messageDAO.clearTable();
     assertTrue(result);
-    // Test function calls' order
+    /* Test function calls' order */
     InOrder order = inOrder(connection, pstmt);
     order.verify(connection).prepareStatement(DELETE, Statement.RETURN_GENERATED_KEYS);
     order.verify(pstmt).execute();
@@ -431,28 +435,28 @@ public class MessageSQLServerDAOTest {
 
   @Test
   void testClearTableThrowsSQLException() throws Exception {
-    // Stub
+    /* Stub */
     when(connection.prepareStatement(anyString(), anyInt())).thenThrow(SQLException.class);
     messageDAO.clearTable();
-    // Test error output
+    /* Test error output */
     assertTrue(errContent.toString().contains("java.sql.SQLException"));
   }
 
   @Test
   void testCloseStatementThrowsSQLException() throws Exception {
-    // Stub
+    /* Stub */
     doThrow(SQLException.class).when(pstmt).close();
     messageDAO.closeStatementAndConnection(pstmt, connection);
-    // Test error output
+    /* Test error output */
     assertTrue(errContent.toString().contains("java.sql.SQLException"));
   }
 
   @Test
   void testCloseConnectionThrowsSQLException() throws Exception {
-    // Stub
+    /* Stub */
     doThrow(SQLException.class).when(connection).close();
     messageDAO.closeStatementAndConnection(pstmt, connection);
-    // Test error output
+    /* Test error output */
     assertTrue(errContent.toString().contains("java.sql.SQLException"));
   }
 

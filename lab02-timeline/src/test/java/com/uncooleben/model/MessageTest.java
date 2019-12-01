@@ -100,74 +100,6 @@ class MessageTest {
 
 	}
 
-	@Test
-	void test_get_username() {
-		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String date_string = "2019-11-01 12:50:20";
-		String username = "彭俊涛";
-		String content = "彭哥牛逼";
-		Date date = null;
-		try {
-			date = format.parse(date_string);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		Message message = new Message(username, content, date);
-		assertEquals(username, message.get_username());
-	}
-
-	@Test
-	void test_get_content() {
-		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String date_string = "2019-11-01 12:50:20";
-		String username = "彭俊涛";
-		String content = "彭哥牛逼";
-		Date date = null;
-		try {
-			date = format.parse(date_string);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		Message message = new Message(username, content, date);
-		assertEquals(content, message.get_content());
-	}
-
-	@Test
-	void test_get_time() {
-		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String date_string = "2019-11-01 12:50:20";
-		String username = "彭俊涛";
-		String content = "彭哥牛逼";
-		Date date = null;
-		try {
-			date = format.parse(date_string);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		Message message = new Message(username, content, date);
-		assertEquals(date_string, format.format(message.get_time()));
-	}
-
-	@Test
-	void test_get_uuid() {
-		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String date_string = "2019-11-01 12:50:20";
-		String username = "彭俊涛";
-		String content = "彭哥牛逼";
-		UUID uuid = UUID.randomUUID();
-		Date date = null;
-		try {
-			date = format.parse(date_string);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		Message message = new Message(uuid, username, content, date);
-		assertEquals(uuid, message.get_uuid());
-	}
 
 	static Stream<Arguments> agoProvider() {
 		return Stream.of(Arguments.of(new Message("彭俊涛", "彭哥牛逼", new Date(1000)), 1500, "Just Now"),
@@ -184,69 +116,7 @@ class MessageTest {
 		assertEquals(result, message.get_ago());
 	}
 
-	@ParameterizedTest
-	@MethodSource("agoProvider")
-	void test_get_ago(Message message, long millisec, String result) {
-		message.set_ago(millisec);
-		assertEquals(result, message.get_ago());
-	}
 
-	@Test
-	void test_set_path() {
-		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String date_string = "2019-11-1 12:50:20";
-		String username = "彭俊涛";
-		String content = "彭哥牛逼";
-		String path = "my computer";
-		Date date = null;
-		try {
-			date = format.parse(date_string);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		Message message = new Message(username, content, date);
-		message.set_path(path);
-		assertEquals(path, message.get_path());
-	}
-
-	@Test
-	void test_get_path() {
-		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String date_string = "2019-11-01 12:50:20";
-		String username = "彭俊涛";
-		String content = "彭哥牛逼";
-		String path = "my computer";
-		Date date = null;
-		try {
-			date = format.parse(date_string);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		Message message = new Message(username, content, date);
-		message.set_path(path);
-		assertEquals(path, message.get_path());
-	}
-
-	@Test
-	void test_get_uuidstr() {
-		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String date_string = "2019-11-01 12:50:20";
-		String username = "彭俊涛";
-		String content = "彭哥牛逼";
-		UUID uuid = UUID.randomUUID();
-		String uuidstr = uuid.toString();
-		Date date = null;
-		try {
-			date = format.parse(date_string);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		Message message = new Message(uuid, username, content, date);
-		assertEquals(uuidstr, message.get_uuidstr());
-	}
 
 	@Test
 	void test_toString() {

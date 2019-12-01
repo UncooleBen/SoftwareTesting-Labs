@@ -9,6 +9,15 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.uncooleben.service.dao.MessageDAO;
 
+/**
+ * This class is a part of Software-Testing lab02 timeline.
+ *
+ * <p>
+ * This is a Test for IndexController.class.
+ *
+ * @author Yuanjie Guo
+ */
+
 class IndexControllerTest {
 
 	private MessageDAO messageDAO = mock(MessageDAO.class);
