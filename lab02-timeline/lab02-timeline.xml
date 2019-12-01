@@ -312,7 +312,7 @@
   
   <target name="compile.module.lab02-timeline.production" description="Compile module lab02-timeline; production classes">
     <mkdir dir="${lab02-timeline.output.dir}"/>
-    <javac destdir="${lab02-timeline.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true">
+    <javac destdir="${lab02-timeline.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="/usr/bin/javac" >
       <compilerarg line="${compiler.args.lab02-timeline}"/>
       <bootclasspath refid="lab02-timeline.module.bootclasspath"/>
       <classpath refid="lab02-timeline.module.production.classpath"/>
@@ -330,7 +330,7 @@
   
   <target name="compile.module.lab02-timeline.tests" depends="compile.module.lab02-timeline.production" description="compile module lab02-timeline; test classes" unless="skip.tests">
     <mkdir dir="${lab02-timeline.testoutput.dir}"/>
-    <javac destdir="${lab02-timeline.testoutput.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true">
+    <javac destdir="${lab02-timeline.testoutput.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="/usr/bin/javac" >
       <compilerarg line="${compiler.args.lab02-timeline}"/>
       <bootclasspath refid="lab02-timeline.module.bootclasspath"/>
       <classpath refid="lab02-timeline.module.classpath"/>
