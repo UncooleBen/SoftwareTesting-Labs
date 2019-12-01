@@ -176,7 +176,7 @@
   
   
   
-  <property name="compiler.args.lab02-timeline" value="-encoding UTF-8 -source 11 -target 1.11 ${compiler.args}"/>
+  <property name="compiler.args.lab02-timeline" value="-encoding UTF-8 -source 11 -target 11 ${compiler.args}"/>
   
   <property name="lab02-timeline.output.dir" value="${module.lab02-timeline.basedir}/target/classes"/>
   <property name="lab02-timeline.testoutput.dir" value="${module.lab02-timeline.basedir}/target/test-classes"/>
