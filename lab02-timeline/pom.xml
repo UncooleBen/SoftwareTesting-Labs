@@ -101,29 +101,10 @@
       </plugin>
 	  
 	  <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.7</version>
-        <executions>
-          <execution>
-            <phase>generate-sources</phase>
-            <configuration>
-              <tasks>
- 
-                <!--
-                  Place any ant task here. You can add anything
-                  you can add between <target> and </target> in a
-                  build.xml.
-                -->
- 
-				
-              </tasks>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>3.0.0-M4</version>
+        </plugin>
 
     </plugins>
   </build>
